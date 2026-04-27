@@ -31,7 +31,9 @@ urlpatterns = [
     path('orders/', include('orders.urls')),
 ]
 
-# Serve static and media files in development
+# WhiteNoise serves static files in production. Media is intentionally served by
+# Django because the bundled product images live in the repository.
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

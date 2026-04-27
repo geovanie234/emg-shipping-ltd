@@ -12,3 +12,4 @@ env/
 myenv/
 tmp*/
 staticfiles/
+cloudflared.exe
