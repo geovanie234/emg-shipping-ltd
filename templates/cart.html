@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart - EMG Shipping Rwanda{% endblock %}
+{% block body_class %}cart-page{% endblock %}
+
+{% block content %}
+
+<section class="page-hero mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+            <p class="small text-uppercase fw-semibold mb-3">Checkout ready</p>
+            <h1 class="display-6 mb-3">Review your cart before delivery</h1>
+            <p class="lead mb-0">Confirm quantities, keep an eye on stock, and move straight to secure checkout.</p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            <a href="{% url 'products_list' %}" class="btn btn-outline-light btn-lg">
+                <i class="bi bi-arrow-left"></i> Continue Shopping
+            </a>
+        </div>
+    </div>
+</section>
+
+{% if items %}
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0">
+            <div class="card-header py-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0"><i class="bi bi-bag-check text-primary me-1"></i> Cart Items ({{ items|length }})</h5>
+                    <form method="post" action="{% url 'clear_cart' %}" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-trash"></i> Clear Cart
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                {% for item in items %}
+                <div class="cart-item p-4 {% if not forloop.last %}border-bottom{% endif %}">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-5">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="product-image">
+                                    {% if item.product.image %}
+                                        <img src="{{ item.product.image.url }}"
+                                             alt="{{ item.product.name }}"
+                                             style="width: 78px; height: 78px; object-fit: cover; border-radius: 16px;">
+                                    {% else %}
+                                        <div class="bg-light d-flex align-items-center justify-content-center"
+                                             style="width: 78px; height: 78px; border-radius: 16px;">
+                                            <i class="bi bi-image text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">{{ item.product.name }}</h6>
+                                    <p class="small text-muted mb-1">SKU: {{ item.product.sku }}</p>
+                                    <span class="badge bg-{{ item.product.inventory_status_color }}">{{ item.product.inventory_status }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 text-md-center">
+                            <span class="d-block text-muted small">Unit Price</span>
+                            <strong>{{ item.product.price }} RWF</strong>
+                        </div>
+
+                        <div class="col-md-3">
+                            <form method="post" action="{% url 'update_cart' item.id %}" class="d-flex gap-2 align-items-center justify-content-md-center">
+                                {% csrf_token %}
+                                <input type="number"
+                                       name="quantity"
+                                       class="form-control quantity-input"
+                                       min="1"
+                                       max="{{ item.product.stock }}"
+                                       value="{{ item.quantity }}">
+                                <button type="submit" class="btn btn-outline-primary btn-sm">Update</button>
+                            </form>
+                            <p class="small text-muted mb-0 mt-2 text-md-center">{{ item.product.stock }} item(s) available</p>
+                        </div>
+
+                        <div class="col-md-2 text-md-end">
+                            <span class="d-block text-muted small">Line Total</span>
+                            <strong class="text-primary">{{ item.total_price }} RWF</strong>
+                            <form method="post" action="{% url 'remove_cart' item.id %}" class="mt-2">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-trash"></i> Remove
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card border-0 mt-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-truck text-primary me-1"></i> Delivery Information</h6>
+                        <p class="small text-muted mb-0">
+                            Free delivery above 50,000 RWF.<br>
+                            Standard delivery: 2,000 RWF across Kigali districts.
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-credit-card text-primary me-1"></i> Accepted Payments</h6>
+                        <div class="d-flex gap-2 flex-wrap mt-2">
+                            <span class="badge bg-light text-dark">Cash on Delivery</span>
+                            <span class="badge bg-light text-dark">MTN MoMo</span>
+                            <span class="badge bg-light text-dark">Airtel Money</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 sticky-top" style="top: 100px;">
+            <div class="card-header py-3">
+                <h5 class="mb-0"><i class="bi bi-receipt text-primary me-1"></i> Order Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Subtotal</span>
+                    <strong>{{ subtotal }} RWF</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Delivery Fee</span>
+                    <strong>{% if delivery_fee %}{{ delivery_fee }} RWF{% else %}FREE{% endif %}</strong>
+                </div>
+
+                {% if not delivery_fee %}
+                <div class="alert alert-success py-2 mb-3">
+                    <i class="bi bi-check-circle me-1"></i> You qualify for free delivery.
+                </div>
+                {% endif %}
+
+                <hr>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <span class="h5 mb-0">Total</span>
+                    <span class="h4 text-primary mb-0">{{ grand_total }} RWF</span>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <form method="get" action="{% url 'checkout' %}" class="m-0" data-checkout-form>
+                        <button
+                            type="submit"
+                            class="btn btn-primary btn-lg w-100"
+                            data-checkout-button
+                            data-checkout-url="{% url 'checkout' %}">
+                            <i class="bi bi-lock"></i> Proceed to Checkout
+                        </button>
+                    </form>
+                    <a href="{% url 'products_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-grid"></i> Browse More Products
+                    </a>
+                </div>
+
+                <div class="text-center mt-4">
+                    <small class="text-muted">
+                        <i class="bi bi-shield-check text-success me-1"></i>
+                        Secure checkout | stock is verified before order confirmation
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card border-0 text-center p-5">
+            <div class="mb-4">
+                <i class="bi bi-cart-x" style="font-size: 5rem; color: #c5d0d7;"></i>
+            </div>
+            <h3 class="mb-3">Your cart is empty</h3>
+            <p class="text-muted mb-4">Add products to your cart and we’ll keep the order ready for fast delivery across Kigali.</p>
+            <a href="{% url 'products_list' %}" class="btn btn-primary btn-lg mx-auto">
+                <i class="bi bi-shop"></i> Start Shopping
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelector('[data-checkout-button]')?.addEventListener('click', function(event) {
+        const button = event.currentTarget;
+        const form = button.closest('[data-checkout-form]');
+        const checkoutUrl = button.dataset.checkoutUrl;
+
+        if (button.disabled) {
+            event.preventDefault();
+            return;
+        }
+
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-lock"></i> Opening Checkout...';
+
+        if (window.emgShowLoader) {
+            window.emgShowLoader('Opening checkout');
+        }
+
+        window.setTimeout(function() {
+            if (form && typeof form.requestSubmit === 'function') {
+                form.requestSubmit();
+                return;
+            }
+
+            if (checkoutUrl) {
+                window.location.href = checkoutUrl;
+            }
+        }, 20);
+    });
+</script>
+{% endblock %}

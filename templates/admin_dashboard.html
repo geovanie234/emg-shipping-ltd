@@ -1,0 +1,560 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - EMG Shipping Rwanda{% endblock %}
+{% block body_class %}admin-dashboard-page{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-metric {
+        height: 100%;
+    }
+
+    .dashboard-metric .metric-label {
+        color: var(--text-muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .dashboard-metric .metric-value {
+        font-size: clamp(1.55rem, 2.8vw, 2.2rem);
+        font-weight: 700;
+        color: var(--brand-900);
+        line-height: 1.1;
+    }
+
+    .dashboard-metric .metric-note {
+        color: var(--text-muted);
+        font-size: 0.92rem;
+        margin-bottom: 0;
+    }
+
+    .dashboard-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+
+    .dashboard-list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.85rem 1rem;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.66);
+        border: 1px solid rgba(13, 39, 59, 0.08);
+    }
+
+    .dashboard-mini-table td,
+    .dashboard-mini-table th {
+        white-space: nowrap;
+    }
+
+    .dashboard-status-form .form-select {
+        min-width: 140px;
+    }
+
+    .dashboard-section-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<section class="page-hero mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+            <p class="small text-uppercase fw-semibold mb-3">Operations control</p>
+            <h1 class="display-5 mb-3">Inventory and sales reporting for EMG Shipping</h1>
+            <p class="lead mb-0">
+                Monitor revenue, track placed orders, watch low-stock items, and keep the business moving from one staff dashboard.
+            </p>
+        </div>
+        <div class="col-lg-4">
+            <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                <a href="{% url 'inventory_management' %}" class="btn btn-primary">
+                    <i class="bi bi-boxes"></i> Inventory Manager
+                </a>
+                <a href="#reports" class="btn btn-outline-light">
+                    <i class="bi bi-graph-up-arrow"></i> Reports
+                </a>
+                <a href="/admin/orders/order/" class="btn btn-outline-light">
+                    <i class="bi bi-box-seam"></i> Django Orders
+                </a>
+                <a href="/admin/products/product/" class="btn btn-outline-light">
+                    <i class="bi bi-boxes"></i> Manage Products
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <a href="?period=7" class="btn {% if period_days == 7 %}btn-primary{% else %}btn-outline-secondary{% endif %}">Last 7 Days</a>
+    <a href="?period=30" class="btn {% if period_days == 30 %}btn-primary{% else %}btn-outline-secondary{% endif %}">Last 30 Days</a>
+    <a href="?period=90" class="btn {% if period_days == 90 %}btn-primary{% else %}btn-outline-secondary{% endif %}">Last 90 Days</a>
+    <span class="align-self-center text-muted small ms-2">Reporting window: {{ period_label }}</span>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="card dashboard-metric border-0">
+            <div class="card-body">
+                <p class="metric-label mb-2">Orders Placed</p>
+                <p class="metric-value mb-2">{{ metrics.orders_placed }}</p>
+                <p class="metric-note">{{ metrics.open_orders }} still active and awaiting completion.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card dashboard-metric border-0">
+            <div class="card-body">
+                <p class="metric-label mb-2">Gross Sales</p>
+                <p class="metric-value mb-2">{{ metrics.gross_sales|floatformat:2 }} RWF</p>
+                <p class="metric-note">Average order value: {{ metrics.average_order_value|floatformat:2 }} RWF.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card dashboard-metric border-0">
+            <div class="card-body">
+                <p class="metric-label mb-2">Delivered Revenue</p>
+                <p class="metric-value mb-2">{{ metrics.delivered_sales|floatformat:2 }} RWF</p>
+                <p class="metric-note">{{ metrics.units_sold }} unit(s) sold across non-cancelled orders.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card dashboard-metric border-0">
+            <div class="card-body">
+                <p class="metric-label mb-2">Inventory On Hand</p>
+                <p class="metric-value mb-2">{{ metrics.inventory_units_remaining }}</p>
+                <p class="metric-note">{{ metrics.low_stock_count }} low stock, {{ metrics.out_of_stock_count }} out of stock.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <div class="dashboard-section-title">
+                    <div>
+                        <h3 class="section-heading mb-1">Recent Orders</h3>
+                        <p class="text-muted mb-0">Quick status control for the latest customer orders.</p>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle dashboard-mini-table">
+                        <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Customer</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Placed</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td>
+                                    <strong>#{{ order.order_number }}</strong><br>
+                                    <small class="text-muted">{{ order.district|default:"No district" }}</small>
+                                </td>
+                                <td>
+                                    {{ order.full_name|default:order.user.username|default:"Guest" }}<br>
+                                    <small class="text-muted">{{ order.items_count }} item(s)</small>
+                                </td>
+                                <td>{{ order.total_amount|floatformat:2 }} RWF</td>
+                                <td>
+                                    <span class="badge bg-{{ order.get_status_color }}">{{ order.status }}</span>
+                                </td>
+                                <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <form method="post" action="{% url 'admin_order_status_update' order.id %}" class="dashboard-status-form d-flex gap-2 flex-wrap">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <select name="status" class="form-select form-select-sm">
+                                            {% for value, label in status_choices %}
+                                            <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                                        <a href="{% url 'invoice' order.id %}" class="btn btn-outline-secondary btn-sm">Invoice</a>
+                                        <a href="{% url 'invoice' order.id %}?print=1" class="btn btn-outline-dark btn-sm" target="_blank" rel="noopener noreferrer">Print</a>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No orders found for this period yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 mb-4">
+            <div class="card-body">
+                <h3 class="section-heading mb-3">Cancellation Alerts</h3>
+                <div class="dashboard-list">
+                    {% for order in recent_cancelled_orders %}
+                    <div class="dashboard-list-item">
+                        <div>
+                            <strong>#{{ order.order_number }}</strong><br>
+                            <small class="text-muted">{{ order.full_name|default:order.user.username|default:"Customer" }}</small>
+                        </div>
+                        <span class="badge bg-danger">Cancelled</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted mb-0">No recent customer cancellations.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 mb-4">
+            <div class="card-body">
+                <h3 class="section-heading mb-3">Status Breakdown</h3>
+                <div class="dashboard-list">
+                    {% for item in status_breakdown %}
+                    <div class="dashboard-list-item">
+                        <span>{{ item.label }}</span>
+                        <strong>{{ item.count }}</strong>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0">
+            <div class="card-body">
+                <h3 class="section-heading mb-3">Payment Methods</h3>
+                <div class="dashboard-list">
+                    {% for item in payment_breakdown %}
+                    <div class="dashboard-list-item">
+                        <span>{{ item.label }}</span>
+                        <strong>{{ item.count }}</strong>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted mb-0">No payment data available yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <h3 class="section-heading mb-3">Inventory Alerts</h3>
+                {% if low_stock_products %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>SKU</th>
+                                <th>Stock</th>
+                                <th>Threshold</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in low_stock_products %}
+                            <tr>
+                                <td>{{ product.name }}</td>
+                                <td>{{ product.sku }}</td>
+                                <td><span class="badge bg-{{ product.inventory_status_color }}">{{ product.stock }}</span></td>
+                                <td>{{ product.low_stock_threshold }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No low-stock alerts right now. Inventory levels look healthy.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <h3 class="section-heading mb-3">Top-Selling Products</h3>
+                {% if top_products %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Sold</th>
+                                <th>Revenue</th>
+                                <th>Remaining</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in top_products %}
+                            <tr>
+                                <td>
+                                    <strong>{{ product.name }}</strong><br>
+                                    <small class="text-muted">{{ product.sku }}</small>
+                                </td>
+                                <td>{{ product.sold_quantity }}</td>
+                                <td>{{ product.sales_revenue|floatformat:2 }} RWF</td>
+                                <td>{{ product.stock }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Sales activity will appear here once orders start coming in.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <h3 class="section-heading mb-3">Daily Sales Trend</h3>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Orders</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in daily_sales %}
+                            <tr>
+                                <td>{{ day.label }}</td>
+                                <td>{{ day.order_count }}</td>
+                                <td>{{ day.revenue|floatformat:2 }} RWF</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card border-0 h-100">
+            <div class="card-body">
+                <h3 class="section-heading mb-3">District Performance</h3>
+                <div class="dashboard-list">
+                    {% for item in district_breakdown %}
+                    <div class="dashboard-list-item">
+                        <span>{{ item.label }}</span>
+                        <strong>{{ item.count }} order(s)</strong>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted mb-0">District activity will appear here once orders are placed.</p>
+                    {% endfor %}
+                </div>
+
+                <hr class="my-4">
+
+                <h4 class="h5 mb-3">Inventory Snapshot</h4>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Stock</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in inventory_products %}
+                            <tr>
+                                <td>{{ product.name }}</td>
+                                <td>{{ product.stock }}</td>
+                                <td><span class="badge bg-{{ product.inventory_status_color }}">{{ product.inventory_status }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1" id="reports">
+    <div class="col-12">
+        <div class="card border-0">
+            <div class="card-body">
+                <div class="dashboard-section-title">
+                    <div>
+                        <h3 class="section-heading mb-1">Reports</h3>
+                        <p class="text-muted mb-0">See sales by item and monitor remaining stock from one place.</p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-primary fs-6 px-3 py-2">{{ sales_report_products|length }} active item(s)</span><br>
+                        <small class="text-muted">{{ metrics.inventory_units_remaining }} unit(s) remaining in stock</small>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-xl-7">
+                        <h4 class="h5 mb-3">Sales by Item</h4>
+                        {% if sales_report_products %}
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>SKU</th>
+                                        <th>Units Sold</th>
+                                        <th>Sales Revenue</th>
+                                        <th>Remaining</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in sales_report_products %}
+                                    <tr>
+                                        <td>{{ product.name }}</td>
+                                        <td>{{ product.sku }}</td>
+                                        <td>{{ product.sold_quantity }}</td>
+                                        <td>{{ product.sales_revenue|floatformat:2 }} RWF</td>
+                                        <td>{{ product.stock }}</td>
+                                        <td><span class="badge bg-{{ product.inventory_status_color }}">{{ product.inventory_status }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted mb-0">No item sales data is available yet.</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-xl-5">
+                        <h4 class="h5 mb-3">Remaining Stock Report</h4>
+                        {% if stock_report_products %}
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>SKU</th>
+                                        <th>Remaining</th>
+                                        <th>Threshold</th>
+                                        <th>Locked</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in stock_report_products %}
+                                    <tr>
+                                        <td>{{ product.name }}</td>
+                                        <td>{{ product.sku }}</td>
+                                        <td>{{ product.stock }}</td>
+                                        <td>{{ product.low_stock_threshold }}</td>
+                                        <td>{% if product.inventory_locked %}Yes{% else %}No{% endif %}</td>
+                                        <td><span class="badge bg-{{ product.inventory_status_color }}">{{ product.inventory_status }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted mb-0">No stock report data is available yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-12">
+        <div class="card border-0">
+            <div class="card-body">
+                <div class="dashboard-section-title">
+                    <div>
+                        <h3 class="section-heading mb-1">Registered Accounts</h3>
+                        <p class="text-muted mb-0">Admin can review how many users have created accounts and see their names.</p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-primary fs-6 px-3 py-2">{{ metrics.registered_users }} total users</span><br>
+                        <small class="text-muted">{{ metrics.customer_accounts }} customer account(s)</small>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Joined</th>
+                                <th>Role</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for account in registered_users %}
+                            <tr>
+                                <td>
+                                    {% if account.first_name or account.last_name %}
+                                        {{ account.first_name }} {{ account.last_name }}
+                                    {% else %}
+                                        {{ account.username }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ account.username }}</td>
+                                <td>{{ account.email|default:"No email" }}</td>
+                                <td>{{ account.date_joined|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    {% if account.is_superuser %}
+                                        <span class="badge bg-danger">Superuser</span>
+                                    {% elif account.is_staff %}
+                                        <span class="badge bg-primary">Staff</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Customer</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">No user accounts have been created yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

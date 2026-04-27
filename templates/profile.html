@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - EMG Shipping Rwanda{% endblock %}
+
+{% block content %}
+
+<section class="page-hero mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+            <p class="page-eyebrow">Account Profile</p>
+            <h1 class="display-6 mb-3">Your profile information</h1>
+            <p class="lead mb-0">Review the account details connected to your orders, delivery updates, and checkout activity.</p>
+        </div>
+        <div class="col-lg-4 d-flex justify-content-lg-end">
+            <div class="profile-hero-card">
+                <span class="profile-avatar profile-avatar--page" aria-hidden="true">
+                    {% if user.first_name or user.last_name %}
+                        {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                    {% else %}
+                        {{ user.username|slice:":2"|upper }}
+                    {% endif %}
+                </span>
+                <div>
+                    <p class="mb-1 fw-semibold">{{ user.get_full_name|default:user.username }}</p>
+                    <p class="mb-0 text-white-50 small">{{ user.email|default:"No email added yet" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="stack-card h-100">
+            <p class="section-kicker">Basic Details</p>
+            <h2 class="section-heading mb-3">Account information</h2>
+
+            <div class="profile-field-list">
+                <div class="profile-field">
+                    <span>Username</span>
+                    <strong>{{ user.username }}</strong>
+                </div>
+                <div class="profile-field">
+                    <span>Full name</span>
+                    <strong>{{ user.get_full_name|default:"Not provided yet" }}</strong>
+                </div>
+                <div class="profile-field">
+                    <span>Email address</span>
+                    <strong>{{ user.email|default:"Not provided yet" }}</strong>
+                </div>
+                <div class="profile-field">
+                    <span>Account type</span>
+                    <strong>{% if user.is_staff %}Staff account{% else %}Customer account{% endif %}</strong>
+                </div>
+                <div class="profile-field">
+                    <span>Joined</span>
+                    <strong>{{ user.date_joined|date:"F d, Y" }}</strong>
+                </div>
+                <div class="profile-field">
+                    <span>Last login</span>
+                    <strong>{{ user.last_login|date:"F d, Y g:i A"|default:"No recent login recorded" }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="stack-card h-100">
+            <p class="section-kicker">Activity</p>
+            <h2 class="section-heading mb-3">Order summary</h2>
+
+            <div class="profile-stat-grid">
+                <div class="metric-card">
+                    <span class="metric-card__label">Total orders</span>
+                    <p class="metric-card__value mb-0">{{ total_orders }}</p>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-card__label">Delivered</span>
+                    <p class="metric-card__value mb-0">{{ delivered_orders }}</p>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-card__label">Pending</span>
+                    <p class="metric-card__value mb-0">{{ pending_orders }}</p>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 mt-4">
+                <a href="{% url 'my_orders' %}" class="btn btn-primary">View My Orders</a>
+                <a href="{% url 'products_list' %}" class="btn btn-outline-secondary">Continue Shopping</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="orders-shell">
+    <div class="orders-toolbar">
+        <div>
+            <p class="section-kicker mb-2">Recent Orders</p>
+            <h2 class="h3 mb-1">Latest activity</h2>
+            <p class="text-muted mb-0">Your most recent orders appear here for quick access.</p>
+        </div>
+    </div>
+
+    {% if recent_orders %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td>
+                            <strong class="d-block">#{{ order.order_number }}</strong>
+                            <small class="text-muted">{{ order.tracking_number }}</small>
+                        </td>
+                        <td>{{ order.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="status-badge status-{{ order.get_status_color }}">{{ order.status }}</span>
+                        </td>
+                        <td>{{ order.total_price }} RWF</td>
+                        <td class="text-end">
+                            <a href="{% url 'order_tracking' order.id %}" class="btn btn-outline-primary btn-sm">Track</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="order-empty p-0 text-start">
+            <h3 class="h5 mb-2">No recent orders</h3>
+            <p class="text-muted mb-0">Place your first order and it will appear here automatically.</p>
+        </div>
+    {% endif %}
+</section>
+
+{% endblock %}

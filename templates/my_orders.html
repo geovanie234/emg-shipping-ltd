@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Orders - EMG Shipping Rwanda{% endblock %}
+
+{% block content %}
+
+<section class="page-hero mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+            <p class="page-eyebrow">Account Overview</p>
+            <h1 class="display-6 mb-3">Track every order from one clean dashboard</h1>
+            <p class="lead mb-0">Review delivery progress, revisit invoices, and keep your order history organized.</p>
+        </div>
+        <div class="col-lg-4">
+            <div class="page-hero__stats">
+                <div class="hero-stat">
+                    <span class="hero-stat__value">{{ total_orders }}</span>
+                    <span class="hero-stat__label">Total orders</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat__value">{{ delivered_orders }}</span>
+                    <span class="hero-stat__label">Delivered</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat__value">{{ pending_orders|add:processing_orders }}</span>
+                    <span class="hero-stat__label">Open orders</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if orders %}
+<div class="row metrics-grid mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                    <span class="metric-card__label">Total Spent</span>
+                    <p class="metric-card__value mb-0">{{ total_spent|floatformat:0 }} RWF</p>
+                </div>
+                <span class="metric-card__icon"><i class="bi bi-cash-stack"></i></span>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                    <span class="metric-card__label">Delivered</span>
+                    <p class="metric-card__value mb-0">{{ delivered_orders }}</p>
+                </div>
+                <span class="metric-card__icon"><i class="bi bi-check-circle"></i></span>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                    <span class="metric-card__label">Processing</span>
+                    <p class="metric-card__value mb-0">{{ processing_orders }}</p>
+                </div>
+                <span class="metric-card__icon"><i class="bi bi-arrow-repeat"></i></span>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                    <span class="metric-card__label">Pending</span>
+                    <p class="metric-card__value mb-0">{{ pending_orders }}</p>
+                </div>
+                <span class="metric-card__icon"><i class="bi bi-clock-history"></i></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="orders-shell">
+    <div class="orders-toolbar">
+        <div>
+            <p class="section-kicker mb-2">Order History</p>
+            <h2 class="h3 mb-1">Your recent activity</h2>
+            <p class="text-muted mb-0">Filter the table to focus on the orders you care about most.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="table-pill">
+                <i class="bi bi-box-seam"></i>
+                {{ orders|length }} visible order{{ orders|length|pluralize }}
+            </span>
+            <select class="form-select form-select-sm" id="orderFilter">
+                <option value="all">All Orders</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Date</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Payment</th>
+                    <th>District</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr class="order-row" data-status="{{ order.status|lower }}">
+                    <td>
+                        <strong class="d-block">#{{ order.order_number }}</strong>
+                        <small class="text-muted">{{ order.tracking_number }}</small>
+                    </td>
+                    <td>
+                        <span class="d-block">{{ order.created_at|date:"M d, Y" }}</span>
+                        <small class="text-muted">{{ order.created_at|time:"g:i A" }}</small>
+                    </td>
+                    <td>
+                        <span class="table-pill">{{ order.item_count }} item{{ order.item_count|pluralize }}</span>
+                    </td>
+                    <td>
+                        <strong class="text-primary">{{ order.total_amount|floatformat:0 }} RWF</strong>
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ order.get_status_color }}">
+                            <i class="bi bi-{% if order.status == 'Delivered' %}check-circle{% elif order.status == 'Shipped' %}truck{% elif order.status == 'Processing' %}arrow-repeat{% elif order.status == 'Pending' %}clock{% else %}x-circle{% endif %}"></i>
+                            {{ order.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="table-pill">
+                            <i class="bi bi-{% if order.payment_method == 'Cash on Delivery' %}cash{% else %}phone{% endif %}"></i>
+                            {% if order.payment_method == 'MTN Mobile Money' %}
+                                MTN MoMo
+                            {% elif order.payment_method == 'Airtel Money' %}
+                                Airtel Money
+                            {% else %}
+                                Cash on Delivery
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>{{ order.district }}</td>
+                    <td class="text-end">
+                        <div class="d-flex justify-content-end gap-2 flex-wrap">
+                            <a href="{% url 'invoice' order.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-receipt"></i> Invoice
+                            </a>
+                            <a href="{% url 'invoice' order.id %}?print=1" class="btn btn-outline-dark btn-sm" target="_blank" rel="noopener noreferrer">
+                                <i class="bi bi-printer"></i> Print
+                            </a>
+                            <a href="{% url 'order_tracking' order.id %}" class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-truck"></i> Track
+                            </a>
+                            <a href="{% url 'reorder' order.id %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-arrow-repeat"></i> Reorder
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% else %}
+<div class="orders-shell order-empty">
+    <i class="bi bi-box-seam mb-4"></i>
+    <h2 class="section-heading mb-3">No orders yet</h2>
+    <p class="text-muted mb-4">Once you place an order, your delivery progress and invoices will appear here.</p>
+    <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg">
+        <i class="bi bi-shop"></i> Start Shopping
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    if (window.location.search.includes('print=1')) {
+        window.setTimeout(function() {
+            window.print();
+        }, 250);
+    }
+
+    document.getElementById('orderFilter')?.addEventListener('change', function() {
+        const filter = this.value;
+
+        document.querySelectorAll('.order-row').forEach(function(row) {
+            row.style.display = filter === 'all' || row.dataset.status === filter ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

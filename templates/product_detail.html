@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - EMG Shipping Rwanda{% endblock %}
+{% block body_class %}product-detail-page{% endblock %}
+
+{% block content %}
+
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'products_list' %}">Products</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ product.name|truncatechars:40 }}</li>
+    </ol>
+</nav>
+
+<section class="card detail-panel border-0 mb-5">
+    <div class="row g-0">
+        <div class="col-lg-6">
+            <div class="product-image-container detail-media">
+                {% if product.has_visible_image %}
+                    <img src="{{ product.image.url }}" class="img-fluid product-image" alt="{{ product.name }}" decoding="async" fetchpriority="high">
+                {% else %}
+                    <div class="bg-light d-flex flex-column align-items-center justify-content-center no-image">
+                        <i class="bi bi-image fs-1 text-muted"></i>
+                        <p class="text-muted mt-3 mb-0">No image available yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="detail-content p-4 p-xl-5">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="status-badge status-{{ stock_class }}">
+                        <i class="bi bi-{% if stock_class == 'success' %}check-circle{% else %}x-circle{% endif %}"></i>
+                        {{ stock_status }}
+                    </span>
+                    <span class="product-card__sku">{{ category_label }}</span>
+                    <span class="product-card__sku">{{ product.sku }}</span>
+                </div>
+
+                <div>
+                    <p class="section-kicker mb-2">Product Details</p>
+                    <h1 class="display-6 mb-3">{{ product.name }}</h1>
+                    <p class="detail-price mb-2">{{ product.price }} RWF</p>
+                    <p class="text-muted mb-0">
+                        Delivery fee: {{ delivery_fee }} RWF with expected delivery {{ delivery_time|lower }} across Kigali districts.
+                    </p>
+                </div>
+
+                <div class="detail-meta-grid">
+                    <div class="detail-meta-item">
+                        <span>Districts</span>
+                        <strong>{{ districts|join:", " }}</strong>
+                    </div>
+                    <div class="detail-meta-item">
+                        <span>Payment</span>
+                        <strong>{{ payment_methods|join:", " }}</strong>
+                    </div>
+                    <div class="detail-meta-item">
+                        <span>Availability</span>
+                        <strong>{{ product.stock }} unit{{ product.stock|pluralize }} in stock</strong>
+                    </div>
+                    <div class="detail-meta-item">
+                        <span>Support</span>
+                        <strong>Live assistance available by phone and WhatsApp</strong>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="h4 mb-3">Description</h2>
+                    <div class="text-muted">{{ product.description|linebreaks }}</div>
+                </div>
+
+                <div class="detail-actions">
+                    {% if product.inventory_locked %}
+                        <button class="btn btn-secondary btn-lg" disabled>
+                            <i class="bi bi-lock"></i> Inventory Locked
+                        </button>
+                    {% elif product.stock > 0 %}
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'add_to_cart' product.id %}" class="btn btn-success btn-lg">
+                                <i class="bi bi-cart-plus"></i> Add to Cart
+                            </a>
+                        {% else %}
+                            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-warning btn-lg">
+                                <i class="bi bi-box-arrow-in-right"></i> Login to Add to Cart
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <button class="btn btn-secondary btn-lg" disabled>
+                            <i class="bi bi-cart-x"></i> Out of Stock
+                        </button>
+                    {% endif %}
+
+                    <a href="{% url 'products_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Continue Shopping
+                    </a>
+                </div>
+
+                {% if not user.is_authenticated %}
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Sign in or create an account to add items to cart and manage orders more quickly.
+                </div>
+                {% endif %}
+
+                <div class="detail-support-card p-4">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                        <div>
+                            <p class="section-kicker mb-2">Need Help?</p>
+                            <h2 class="h4 mb-2">Talk to our delivery team</h2>
+                            <p class="text-muted mb-0">Questions about product availability, payment, or delivery can be handled right away.</p>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="tel:0789670931" class="btn btn-outline-primary">
+                                <i class="bi bi-telephone"></i> Call
+                            </a>
+                            <a href="https://wa.me/250789670931?text=Hello%20EMG%20Shipping%2C%20I%20need%20help%20with%20{{ product.name|urlencode }}" class="btn btn-outline-success" target="_blank" rel="noopener noreferrer">
+                                <i class="bi bi-whatsapp"></i> WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="small text-muted d-block mb-2">Share this product</p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="#" class="btn btn-sm btn-outline-primary" onclick="shareOnFacebook(); return false;">
+                            <i class="bi bi-facebook"></i> Facebook
+                        </a>
+                        <a href="#" class="btn btn-sm btn-outline-secondary" onclick="shareOnTwitter(); return false;">
+                            <i class="bi bi-twitter-x"></i> X
+                        </a>
+                        <a href="#" class="btn btn-sm btn-outline-success" onclick="shareOnWhatsApp(); return false;">
+                            <i class="bi bi-whatsapp"></i> WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if related_products %}
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+        <div>
+            <p class="section-kicker mb-2">Suggested For You</p>
+            <h2 class="section-heading mb-2">You might also like</h2>
+            <p class="section-subtitle mb-0">More products that pair well with this item and deliver just as quickly.</p>
+        </div>
+    </div>
+
+    <div class="row product-grid">
+        {% for related in related_products %}
+        <div class="col-md-6 col-xl-3">
+            <div class="card product-card border-0">
+                <div class="product-card__media">
+                    <div class="product-card__top">
+                        <span class="product-card__sku">{{ related.sku|default:'EMG Item' }}</span>
+                        <span class="status-badge status-{{ related.inventory_status_color }}">
+                            <i class="bi bi-{% if related.inventory_status_color == 'success' %}check-circle{% elif related.inventory_status_color == 'warning' %}exclamation-circle{% else %}x-circle{% endif %}"></i>
+                            {{ related.inventory_status }}
+                        </span>
+                    </div>
+
+                    {% if related.has_visible_image %}
+                        <img src="{{ related.image.url }}" class="card-img-top" alt="{{ related.name }}" loading="lazy" decoding="async">
+                    {% else %}
+                        <div class="product-card-placeholder d-flex align-items-center justify-content-center">
+                            <i class="bi bi-image text-muted fs-3"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="product-card__content">
+                    <div>
+                        <h3 class="h5 mb-2">{{ related.name|truncatechars:34 }}</h3>
+                        <p class="product-card__description mb-0">{{ related.description|truncatewords:12 }}</p>
+                    </div>
+                    <div class="product-card__footer">
+                        <p class="product-price fw-bold h5 mb-0">{{ related.price }} RWF</p>
+                        <a href="{% url 'product_detail' related.id %}" class="btn btn-outline-primary">
+                            View
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="review-card">
+    <p class="section-kicker mb-2">Customer Voice</p>
+    <h2 class="section-heading mb-3">Reviews</h2>
+    <div class="empty-state p-0">
+        <div class="empty-state__icon">
+            <i class="bi bi-star"></i>
+        </div>
+        <h3 class="h4 mb-2">Reviews are coming soon</h3>
+        <p class="text-muted mb-0">The product page is ready for future customer feedback once the review workflow is added.</p>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function shareOnFacebook() {
+        window.open(
+            'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href),
+            'facebook-share',
+            'width=600,height=400'
+        );
+    }
+
+    function shareOnTwitter() {
+        window.open(
+            'https://twitter.com/intent/tweet?text=' + encodeURIComponent('Check out this product: {{ product.name|escapejs }}') + '&url=' + encodeURIComponent(window.location.href),
+            'twitter-share',
+            'width=600,height=400'
+        );
+    }
+
+    function shareOnWhatsApp() {
+        window.open(
+            'https://wa.me/?text=' + encodeURIComponent('Check out this product: {{ product.name|escapejs }} - ' + window.location.href),
+            'whatsapp-share',
+            'width=600,height=400'
+        );
+    }
+</script>
+{% endblock %}

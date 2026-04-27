@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}EMG Shipping Rwanda - Products{% endblock %}
+{% block body_class %}products-page{% endblock %}
+
+{% block content %}
+
+<section class="page-hero mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <p class="page-eyebrow">Delivery-first storefront</p>
+            <h1 class="display-5 mb-3">Shop by name, category, and curated recommendations</h1>
+            <p class="lead mb-4">
+                Browse smarter with category filters, product name suggestions, and hand-picked items that stand out for stock, value, and freshness.
+            </p>
+            <div class="hero-actions">
+                <a href="#products" class="btn btn-primary btn-lg">
+                    <i class="bi bi-bag-check"></i> Explore Catalog
+                </a>
+                <a href="{% url 'public_tracking_search' %}" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-geo-alt"></i> Track an Order
+                </a>
+            </div>
+            <div class="page-hero__stats">
+                <div class="hero-stat">
+                    <span class="hero-stat__value">{{ catalog_total }}</span>
+                    <span class="hero-stat__label">Active products</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat__value">{{ in_stock_total }}</span>
+                    <span class="hero-stat__label">Ready to ship</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat__value">{{ category_filters|length }}</span>
+                    <span class="hero-stat__label">Live categories</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="hero-highlight-card surface-panel h-100">
+                <p class="section-kicker">Smart Shopping</p>
+                <h3>Find products the easy way</h3>
+                <p class="text-muted mb-4">
+                    Search by product name, narrow down by category, and use the curated sections below to discover strong options faster.
+                </p>
+                <ul class="hero-feature-list">
+                    <li>
+                        <i class="bi bi-check2-circle"></i>
+                        <span>Product-name suggestions appear while typing into the search box.</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check2-circle"></i>
+                        <span>Category filters work with live catalog counts.</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check2-circle"></i>
+                        <span>Best and good-value picks help customers discover solid choices quickly.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="search-shell surface-panel mb-4">
+    <form method="GET" action="." class="row g-3 align-items-end">
+        <div class="col-lg-5">
+            <label for="catalogSearch" class="form-label fw-semibold">Search by product name</label>
+            <div class="input-with-icon">
+                <i class="bi bi-search"></i>
+                <input
+                    id="catalogSearch"
+                    type="text"
+                    name="q"
+                    class="form-control form-control-lg"
+                    placeholder="Search product name, description, or SKU..."
+                    value="{{ query }}"
+                    list="productNameSuggestions"
+                >
+            </div>
+            <datalist id="productNameSuggestions">
+                {% for suggestion in search_suggestions %}
+                    <option value="{{ suggestion }}"></option>
+                {% endfor %}
+            </datalist>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <label for="catalogCategory" class="form-label fw-semibold">Category</label>
+            <select id="catalogCategory" name="category" class="form-select form-select-lg">
+                <option value="">All categories</option>
+                {% for filter in category_filters %}
+                    <option value="{{ filter.value }}" {% if filter.value == category %}selected{% endif %}>
+                        {{ filter.label }} ({{ filter.count }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-6 col-lg-2">
+            <label for="catalogSort" class="form-label fw-semibold">Sort</label>
+            <select id="catalogSort" name="sort" class="form-select form-select-lg">
+                <option value="featured" {% if sort == 'featured' %}selected{% endif %}>Featured</option>
+                <option value="latest" {% if sort == 'latest' %}selected{% endif %}>Newest</option>
+                <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Lowest Price</option>
+                <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Highest Price</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2 d-grid">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-search"></i> Search
+            </button>
+        </div>
+    </form>
+
+    {% if category_filters %}
+    <div class="search-shell__meta mt-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+            <p class="fw-semibold mb-0">Browse by category</p>
+            {% if query or category %}
+                <a href="{% url 'product_list' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset filters
+                </a>
+            {% endif %}
+        </div>
+        <div class="filter-chip-group">
+            {% for filter in category_filters %}
+                <a href="?category={{ filter.value }}" class="filter-chip {% if filter.value == category %}is-active{% endif %}">
+                    {{ filter.label }} <span class="filter-chip__count">{{ filter.count }}</span>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+{% if best_products and not query and not category %}
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+        <div>
+            <p class="section-kicker mb-2">Best Products</p>
+            <h2 class="section-heading mb-2">Top picks customers should notice first</h2>
+            <p class="section-subtitle mb-0">These products are strong on stock, availability, and overall shopping value.</p>
+        </div>
+    </div>
+    <div class="row product-grid">
+        {% for product in best_products %}
+        <div class="col-md-6 col-xl-3">
+            <div class="card product-card border-0">
+                <div class="product-card__media">
+                    <div class="product-card__top">
+                        <span class="product-card__sku">{{ product.get_category_display }}</span>
+                        <span class="status-badge status-{{ product.inventory_status_color }}">
+                            <i class="bi bi-{% if product.inventory_status_color == 'success' %}check-circle{% elif product.inventory_status_color == 'warning' %}exclamation-circle{% else %}x-circle{% endif %}"></i>
+                            {{ product.inventory_status }}
+                        </span>
+                    </div>
+                    {% if product.has_visible_image %}
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" loading="lazy" decoding="async">
+                    {% else %}
+                        <div class="product-card-placeholder d-flex flex-column text-center p-5">
+                            <i class="bi bi-image fs-1 text-muted"></i>
+                            <p class="text-muted small mt-3 mb-0">Preview image coming soon</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="product-card__content">
+                    <div>
+                        <h3 class="h5 mb-2">{{ product.name|truncatechars:34 }}</h3>
+                        <p class="product-card__description mb-0">{{ product.description|truncatewords:14 }}</p>
+                    </div>
+                    <div class="product-card__footer">
+                        <p class="product-price fw-bold h5 mb-0">{{ product.price }} RWF</p>
+                        <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-primary">View</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if good_products and not query and not category %}
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+        <div>
+            <p class="section-kicker mb-2">Good Value Picks</p>
+            <h2 class="section-heading mb-2">Helpful suggestions for everyday shopping</h2>
+            <p class="section-subtitle mb-0">Lower-price, in-stock items that still offer reliable ordering options.</p>
+        </div>
+    </div>
+    <div class="row product-grid product-grid--compact">
+        {% for product in good_products %}
+        <div class="col-md-6 col-xl-3">
+            <div class="card product-card border-0">
+                <div class="product-card__media">
+                    <div class="product-card__top">
+                        <span class="product-card__sku">{{ product.get_category_display }}</span>
+                        <span class="status-badge status-{{ product.inventory_status_color }}">
+                            <i class="bi bi-{% if product.inventory_status_color == 'success' %}check-circle{% elif product.inventory_status_color == 'warning' %}exclamation-circle{% else %}x-circle{% endif %}"></i>
+                            {{ product.inventory_status }}
+                        </span>
+                    </div>
+                    {% if product.has_visible_image %}
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" loading="lazy" decoding="async">
+                    {% else %}
+                        <div class="product-card-placeholder d-flex flex-column text-center p-5">
+                            <i class="bi bi-image fs-1 text-muted"></i>
+                            <p class="text-muted small mt-3 mb-0">Preview image coming soon</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="product-card__content">
+                    <div>
+                        <h3 class="h5 mb-2">{{ product.name|truncatechars:34 }}</h3>
+                        <p class="product-card__description mb-0">{{ product.description|truncatewords:14 }}</p>
+                    </div>
+                    <div class="product-card__footer">
+                        <p class="product-price fw-bold h5 mb-0">{{ product.price }} RWF</p>
+                        <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-primary">View</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if query or category %}
+<section class="results-summary surface-panel mb-4">
+    <div>
+        <p class="section-kicker mb-2">Search Results</p>
+        <h2 class="mb-1">Showing {{ total_products }} match{{ total_products|pluralize }}</h2>
+        <p class="text-muted mb-0">
+            {% if query and selected_category_label %}
+                Results for "{{ query }}" in {{ selected_category_label }}
+            {% elif query %}
+                Results for "{{ query }}"
+            {% elif selected_category_label %}
+                Browsing {{ selected_category_label }}
+            {% endif %}
+        </p>
+    </div>
+    <a href="{% url 'product_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-counterclockwise"></i> Clear search
+    </a>
+</section>
+{% endif %}
+
+{% if products %}
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+    <div>
+        <p class="section-kicker mb-2">Catalog</p>
+        <h2 id="products" class="section-heading mb-2">
+            {% if query or category %}
+                Matching Products
+            {% else %}
+                Full Product Catalog
+            {% endif %}
+        </h2>
+        <p class="section-subtitle mb-0">
+            Search by name, filter by category, and compare current stock before ordering.
+        </p>
+    </div>
+    <span class="table-pill">
+        <i class="bi bi-grid-3x3-gap"></i>
+        {{ total_products }} item{{ total_products|pluralize }} visible
+    </span>
+</div>
+
+<div class="row product-grid">
+    {% for product in products %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card product-card border-0">
+            <div class="product-card__media">
+                <div class="product-card__top">
+                    <span class="product-card__sku">{{ product.get_category_display }}</span>
+                    <span class="status-badge status-{{ product.inventory_status_color }}">
+                        <i class="bi bi-{% if product.inventory_status_color == 'success' %}check-circle{% elif product.inventory_status_color == 'warning' %}exclamation-circle{% else %}x-circle{% endif %}"></i>
+                        {{ product.inventory_status }}
+                    </span>
+                </div>
+
+                {% if product.has_visible_image %}
+                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" loading="lazy" decoding="async">
+                {% else %}
+                    <div class="product-card-placeholder d-flex flex-column text-center p-5">
+                        <i class="bi bi-image fs-1 text-muted"></i>
+                        <p class="text-muted small mt-3 mb-0">Preview image coming soon</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="product-card__content">
+                <div>
+                    <h3 class="h4 mb-2">{{ product.name|truncatechars:42 }}</h3>
+                    <p class="product-card__description mb-0">{{ product.description|truncatewords:18 }}</p>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                    <div>
+                        <p class="small text-muted mb-1">Price</p>
+                        <p class="product-price fw-bold h3 mb-0">{{ product.price }} RWF</p>
+                    </div>
+                    <div class="text-end">
+                        <p class="small text-muted mb-1">Stock</p>
+                        <p class="mb-0 fw-semibold">{{ product.stock }} unit{{ product.stock|pluralize }}</p>
+                    </div>
+                </div>
+
+                <div class="product-card__footer">
+                    <a href="{% url 'product_detail' product.id %}" class="btn btn-primary flex-grow-1">
+                        <i class="bi bi-eye"></i> View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state surface-panel">
+    <div class="empty-state__icon">
+        <i class="bi bi-search"></i>
+    </div>
+    <h2 class="mb-3">
+        {% if query or category %}
+            No products match your search
+        {% else %}
+            No products available right now
+        {% endif %}
+    </h2>
+    <p class="text-muted mb-4">
+        {% if query or category %}
+            Try a different product name, switch category, or reset the filters to see everything again.
+        {% else %}
+            The catalog will appear here as soon as products are added and activated.
+        {% endif %}
+    </p>
+    <div class="filter-chip-group justify-content-center">
+        <a href="{% url 'product_list' %}" class="btn btn-primary">
+            <i class="bi bi-arrow-left"></i> Browse all products
+        </a>
+        {% for filter in category_filters|slice:":4" %}
+            <a href="?category={{ filter.value }}" class="filter-chip">
+                {{ filter.label }}
+            </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if not query and not category and low_stock_total %}
+<div class="alert alert-warning mt-4 mb-0">
+    <i class="bi bi-exclamation-circle me-1"></i>
+    {{ low_stock_total }} product{{ low_stock_total|pluralize }} currently have low stock. Customers can still buy them while inventory lasts.
+</div>
+{% endif %}
+
+{% endblock %}

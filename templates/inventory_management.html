@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventory Management - EMG Shipping Rwanda{% endblock %}
+{% block body_class %}inventory-management-page{% endblock %}
+
+{% block extra_css %}
+<style>
+    .inventory-table input,
+    .inventory-table select,
+    .inventory-table textarea {
+        min-width: 110px;
+    }
+
+    .inventory-table textarea {
+        min-width: 220px;
+        min-height: 72px;
+        resize: vertical;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+            <p class="small text-uppercase fw-semibold mb-3">Inventory control</p>
+            <h1 class="display-5 mb-3">Manage products, stock, and lock status</h1>
+            <p class="lead mb-0">Staff can update product details, delete products, and lock or unlock inventory directly from this page.</p>
+        </div>
+        <div class="col-lg-4">
+            <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+                <form method="post" class="m-0">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="unlock_all">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-unlock"></i> Unlock All Products
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="card border-0 mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+            <div>
+                <p class="section-kicker mb-2">Add Inventory</p>
+                <h2 class="section-heading mb-1">Create a new product</h2>
+                <p class="text-muted mb-0">Staff can add a product here, then update, lock, unlock, or delete it below.</p>
+            </div>
+        </div>
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create">
+            <div class="col-md-6 col-xl-3">
+                <label class="form-label">Name</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            <div class="col-md-6 col-xl-2">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-select">
+                    {% for value, label in category_choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-xl-3">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="2" required></textarea>
+            </div>
+            <div class="col-sm-4 col-xl-1">
+                <label class="form-label">Price</label>
+                <input type="number" name="price" class="form-control" min="0" step="0.01" value="0" required>
+            </div>
+            <div class="col-sm-4 col-xl-1">
+                <label class="form-label">Stock</label>
+                <input type="number" name="stock" class="form-control" min="0" value="0" required>
+            </div>
+            <div class="col-sm-4 col-xl-2">
+                <label class="form-label">Low Stock Threshold</label>
+                <input type="number" name="low_stock_threshold" class="form-control" min="0" value="5" required>
+            </div>
+            <div class="col-md-6">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="is_active" id="newProductActive" checked>
+                    <label class="form-check-label" for="newProductActive">Active</label>
+                </div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" name="inventory_locked" id="newProductLocked">
+                    <label class="form-check-label" for="newProductLocked">Start as locked</label>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex justify-content-md-end align-items-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add Product
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table align-middle inventory-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Threshold</th>
+                        <th>Status</th>
+                        <th>Flags</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr data-product-row data-product-id="{{ product.id }}">
+                        <td>
+                            <input type="text" name="name" class="form-control form-control-sm" value="{{ product.name }}" required data-field="name">
+                            <small class="text-muted">{{ product.sku }}</small>
+                        </td>
+                        <td>
+                            <select name="category" class="form-select form-select-sm" data-field="category">
+                                {% for value, label in category_choices %}
+                                <option value="{{ value }}" {% if product.category == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <textarea name="description" class="form-control form-control-sm" data-field="description">{{ product.description }}</textarea>
+                        </td>
+                        <td>
+                            <input type="number" name="price" step="0.01" min="0" class="form-control form-control-sm" value="{{ product.price }}" data-field="price">
+                        </td>
+                        <td>
+                            <input type="number" name="stock" min="0" class="form-control form-control-sm" value="{{ product.stock }}" data-field="stock">
+                        </td>
+                        <td>
+                            <input type="number" name="low_stock_threshold" min="0" class="form-control form-control-sm" value="{{ product.low_stock_threshold }}" data-field="low_stock_threshold">
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ product.inventory_status_color }}">{{ product.inventory_status }}</span>
+                        </td>
+                        <td>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="inventory_locked" id="lock{{ product.id }}" {% if product.inventory_locked %}checked{% endif %} data-field="inventory_locked">
+                                <label class="form-check-label small" for="lock{{ product.id }}">Locked</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_active" id="active{{ product.id }}" {% if product.is_active %}checked{% endif %} data-field="is_active">
+                                <label class="form-check-label small" for="active{{ product.id }}">Active</label>
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-grid gap-2">
+                                <form method="post" id="update-product-{{ product.id }}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="update">
+                                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                                    <input type="hidden" name="name" value="">
+                                    <input type="hidden" name="category" value="">
+                                    <input type="hidden" name="description" value="">
+                                    <input type="hidden" name="price" value="">
+                                    <input type="hidden" name="stock" value="">
+                                    <input type="hidden" name="low_stock_threshold" value="">
+                                    <input type="hidden" name="inventory_locked" value="">
+                                    <input type="hidden" name="is_active" value="">
+                                </form>
+                                <button type="button" class="btn btn-primary btn-sm" data-inventory-update data-product-id="{{ product.id }}">
+                                    <i class="bi bi-save"></i> Update
+                                </button>
+                                <form method="post" id="toggle-lock-product-{{ product.id }}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="toggle_lock">
+                                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
+                                        <i class="bi bi-{% if product.inventory_locked %}unlock{% else %}lock{% endif %}"></i>
+                                        {% if product.inventory_locked %}Unlock{% else %}Lock{% endif %}
+                                    </button>
+                                </form>
+                                <form method="post" id="delete-product-{{ product.id }}" onsubmit="return confirm('Delete {{ product.name|escapejs }} permanently?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">No products available yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('[data-inventory-update]').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const productId = button.dataset.productId;
+            const row = document.querySelector('[data-product-row][data-product-id="' + productId + '"]');
+            const form = document.getElementById('update-product-' + productId);
+
+            if (!row || !form) {
+                return;
+            }
+
+            ['name', 'category', 'description', 'price', 'stock', 'low_stock_threshold'].forEach(function(fieldName) {
+                const source = row.querySelector('[data-field="' + fieldName + '"]');
+                const target = form.querySelector('input[name="' + fieldName + '"]');
+                if (source && target) {
+                    target.value = source.value;
+                }
+            });
+
+            const inventoryLocked = row.querySelector('[data-field="inventory_locked"]');
+            const isActive = row.querySelector('[data-field="is_active"]');
+            form.querySelector('input[name="inventory_locked"]').value = inventoryLocked && inventoryLocked.checked ? 'on' : '';
+            form.querySelector('input[name="is_active"]').value = isActive && isActive.checked ? 'on' : '';
+
+            form.submit();
+        });
+    });
+</script>
+{% endblock %}

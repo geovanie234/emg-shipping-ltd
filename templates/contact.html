@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact Us - EMG Shipping Rwanda{% endblock %}
+
+{% block content %}
+
+<section class="page-hero text-center mb-5">
+    <p class="page-eyebrow">Contact EMG Shipping</p>
+    <h1 class="display-5 mb-3">Support that feels as clear as the storefront</h1>
+    <p class="lead mb-0">
+        Reach out for help with orders, delivery, payments, or anything you need before checkout.
+    </p>
+</section>
+
+<div class="row contact-layout mb-4">
+    <div class="col-lg-5">
+        <div class="contact-info-card h-100">
+            <p class="section-kicker">Get In Touch</p>
+            <h2 class="section-heading mb-3">Talk to our team directly</h2>
+            <p class="text-muted mb-4">We respond to customer questions quickly and can help you with delivery details, payments, or product availability.</p>
+
+            <ul class="contact-list mb-4">
+                <li>
+                    <i class="bi bi-geo-alt"></i>
+                    <div>
+                        <strong class="d-block mb-1">Address</strong>
+                        <span class="text-muted">{{ address }}</span>
+                    </div>
+                </li>
+                <li>
+                    <i class="bi bi-telephone"></i>
+                    <div>
+                        <strong class="d-block mb-1">Phone</strong>
+                        <a href="tel:{{ phone|cut:' ' }}">{{ phone }}</a>
+                    </div>
+                </li>
+                <li>
+                    <i class="bi bi-envelope"></i>
+                    <div>
+                        <strong class="d-block mb-1">Email</strong>
+                        <a href="mailto:{{ email }}">{{ email }}</a>
+                    </div>
+                </li>
+                <li>
+                    <i class="bi bi-clock"></i>
+                    <div>
+                        <strong class="d-block mb-1">Business Hours</strong>
+                        <span class="text-muted d-block">{{ hours }}</span>
+                        <span class="text-muted">{{ sunday_hours }}</span>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="contact-quick-actions">
+                <a href="tel:{{ phone|cut:' ' }}" class="btn btn-primary">
+                    <i class="bi bi-telephone"></i> Call Support
+                </a>
+                <a href="https://wa.me/250789670931?text=Hello%20EMG%20Shipping%2C%20I%20need%20help%20with%20my%20order." class="btn btn-outline-success" target="_blank" rel="noopener noreferrer">
+                    <i class="bi bi-whatsapp"></i> WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="contact-form-panel h-100">
+            <p class="section-kicker">Send A Message</p>
+            <h2 class="section-heading mb-3">Tell us what you need</h2>
+            <p class="text-muted mb-4">Use the form below and our team will follow up as soon as possible.</p>
+
+            <form method="post" action="." class="row g-3">
+                {% csrf_token %}
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold" for="contact_name">Your Name *</label>
+                    <input id="contact_name" type="text" name="name" class="form-control" placeholder="Enter your name" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold" for="contact_email">Email Address *</label>
+                    <input id="contact_email" type="email" name="email" class="form-control" placeholder="Enter your email" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold" for="contact_phone">Phone Number</label>
+                    <input id="contact_phone" type="tel" name="phone" class="form-control" placeholder="Enter your phone number">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold" for="contact_subject">Subject *</label>
+                    <input id="contact_subject" type="text" name="subject" class="form-control" placeholder="Message subject" required>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label fw-semibold" for="contact_message">Message *</label>
+                    <textarea id="contact_message" name="message" class="form-control" rows="6" placeholder="Tell us how we can help..." required></textarea>
+                </div>
+
+                <div class="col-12 d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-send"></i> Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="map-frame">
+    <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d255282.35878609512!2d29.939514799999998!3d-1.9441067!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x19dca4258ed8e797%3A0xf32b46f4aa46e58!2sKigali%2C%20Rwanda!5e0!3m2!1sen!2s!4v1700000000000!5m2!1sen!2s"
+        allowfullscreen=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+</div>
+
+{% endblock %}

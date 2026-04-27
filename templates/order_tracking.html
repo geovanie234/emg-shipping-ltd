@@ -1,0 +1,467 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Track Order #{{ order.order_number }} - EMG Shipping Rwanda{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold">
+                    <i class="bi bi-truck text-primary"></i> 
+                    Track Your Order
+                </h1>
+                <p class="lead text-muted">Real-time delivery status for order #{{ order.order_number }}</p>
+            </div>
+            
+            <!-- Order Summary Card -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">
+                                <i class="bi bi-info-circle text-primary"></i> 
+                                Order Details
+                            </h5>
+                            <div class="bg-light p-3 rounded">
+                                <p class="mb-2">
+                                    <strong>Order Number:</strong><br>
+                                    {{ order.order_number }}
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Tracking Number:</strong><br>
+                                    <span class="badge bg-dark">{{ order.tracking_number }}</span>
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Order Date:</strong><br>
+                                    {{ order.created_at|date:"F d, Y" }} at {{ order.created_at|time:"g:i A" }}
+                                </p>
+                                <p class="mb-0">
+                                    <strong>Total Amount:</strong><br>
+                                    <span class="h4 text-primary">{{ order.total_price }} RWF</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3">
+                                <i class="bi bi-geo-alt text-primary"></i> 
+                                Delivery Address
+                            </h5>
+                            <div class="bg-light p-3 rounded">
+                                <p class="mb-2">
+                                    <strong>Name:</strong> {{ order.full_name }}
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Phone:</strong> {{ order.phone|default:"Not provided" }}
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Address:</strong><br>
+                                    {{ order.address }}
+                                </p>
+                                <p class="mb-0">
+                                    <strong>District:</strong> {{ order.district }}, {{ order.city }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tracking Progress Card -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-diagram-3 text-primary"></i> 
+                        Order Status
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <!-- Status Badge -->
+                    <div class="text-center mb-4">
+                        {% if order.status == 'Delivered' %}
+                            <span class="badge bg-success fs-5 px-4 py-3">
+                                <i class="bi bi-check-circle-fill"></i> DELIVERED
+                            </span>
+                        {% elif order.status == 'Shipped' %}
+                            <span class="badge bg-info fs-5 px-4 py-3">
+                                <i class="bi bi-truck"></i> IN TRANSIT
+                            </span>
+                        {% elif order.status == 'Processing' %}
+                            <span class="badge bg-warning fs-5 px-4 py-3">
+                                <i class="bi bi-arrow-repeat"></i> PROCESSING
+                            </span>
+                        {% elif order.status == 'Pending' %}
+                            <span class="badge bg-secondary fs-5 px-4 py-3">
+                                <i class="bi bi-clock"></i> PENDING
+                            </span>
+                        {% elif order.status == 'Cancelled' %}
+                            <span class="badge bg-danger fs-5 px-4 py-3">
+                                <i class="bi bi-x-circle"></i> CANCELLED
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" 
+                                 style="width: {{ progress|default:order.get_status_percentage }}%;"
+                                 aria-valuenow="{{ progress|default:order.get_status_percentage }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <small class="text-muted">Pending</small>
+                            <small class="text-muted">Processing</small>
+                            <small class="text-muted">Shipped</small>
+                            <small class="text-muted">Delivered</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Timeline Steps -->
+                    <div class="tracking-timeline mt-5">
+                        <div class="timeline-steps">
+                            
+                            <!-- Step 1: Order Placed -->
+                            <div class="timeline-step {% if order.status != 'Cancelled' %}completed{% endif %}">
+                                <div class="timeline-icon">
+                                    <i class="bi bi-bag-check"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>Order Placed</h6>
+                                    <p class="small text-muted">{{ order.created_at|date:"M d, Y H:i" }}</p>
+                                    <p class="small">Your order has been confirmed</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 2: Processing -->
+                            <div class="timeline-step {% if order.status in 'Processing,Shipped,Delivered' %}completed{% endif %}">
+                                <div class="timeline-icon">
+                                    <i class="bi bi-gear"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>Processing</h6>
+                                    <p class="small text-muted">
+                                        {% if order.status in 'Processing,Shipped,Delivered' %}
+                                            {{ order.updated_at|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            Pending
+                                        {% endif %}
+                                    </p>
+                                    <p class="small">Your order is being prepared</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 3: Shipped -->
+                            <div class="timeline-step {% if order.status in 'Shipped,Delivered' %}completed{% endif %}">
+                                <div class="timeline-icon">
+                                    <i class="bi bi-truck"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>Shipped</h6>
+                                    <p class="small text-muted">
+                                        {% if order.status in 'Shipped,Delivered' %}
+                                            {{ order.updated_at|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            Pending
+                                        {% endif %}
+                                    </p>
+                                    <p class="small">Your order is on the way</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 4: Delivered -->
+                            <div class="timeline-step {% if order.status == 'Delivered' %}completed{% endif %}">
+                                <div class="timeline-icon">
+                                    <i class="bi bi-house-check"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>Delivered</h6>
+                                    <p class="small text-muted">
+                                        {% if order.status == 'Delivered' and order.actual_delivery %}
+                                            {{ order.actual_delivery|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            Pending
+                                        {% endif %}
+                                    </p>
+                                    <p class="small">Order delivered to your address</p>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    
+                    <!-- Cancelled Status -->
+                    {% if order.status == 'Cancelled' %}
+                    <div class="alert alert-danger mt-4 text-center">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong>This order has been cancelled.</strong>
+                        <p class="mb-0 mt-2">If you have any questions, please contact our support team.</p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Delivery Estimate -->
+                    {% if order.status != 'Delivered' and order.status != 'Cancelled' %}
+                    <div class="alert alert-info mt-4">
+                        <i class="bi bi-clock-history"></i>
+                        <strong>Estimated Delivery:</strong>
+                        {% if order.estimated_delivery %}
+                            {{ order.estimated_delivery|date:"F d, Y" }} by {{ order.estimated_delivery|time:"g:i A" }}
+                        {% else %}
+                            Within 24 hours of order confirmation
+                        {% endif %}
+                        <br>
+                        <small>You will receive SMS updates on your order status.</small>
+                    </div>
+                    {% endif %}
+                    
+                </div>
+            </div>
+            
+            <!-- Tracking Updates Timeline -->
+            {% if tracking_updates %}
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history text-primary"></i> 
+                        Tracking History
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="tracking-history">
+                        {% for update in tracking_updates %}
+                        <div class="history-item p-3 {% if not forloop.last %}border-bottom{% endif %}">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <div class="history-icon 
+                                        {% if update.status == 'Delivered' %}bg-success
+                                        {% elif update.status == 'Shipped' %}bg-info
+                                        {% elif update.status == 'Processing' %}bg-warning
+                                        {% elif update.status == 'Pending' %}bg-secondary
+                                        {% else %}bg-danger{% endif %}">
+                                        <i class="bi 
+                                            {% if update.status == 'Delivered' %}bi-check-lg
+                                            {% elif update.status == 'Shipped' %}bi-truck
+                                            {% elif update.status == 'Processing' %}bi-gear
+                                            {% elif update.status == 'Pending' %}bi-clock
+                                            {% else %}bi-x-lg{% endif %}"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">{{ update.status }}</h6>
+                                        <small class="text-muted">{{ update.created_at|date:"M d, Y H:i" }}</small>
+                                    </div>
+                                    <p class="mb-1 text-muted small">{{ update.location }}</p>
+                                    <p class="mb-0 small">{{ update.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Action Buttons -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between gap-2 flex-wrap">
+                        <a href="{% url 'my_orders' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Orders
+                        </a>
+                        <a href="{% url 'invoice' order.id %}" class="btn btn-outline-primary">
+                            <i class="bi bi-receipt"></i> View Invoice
+                        </a>
+                        {% if order.status == 'Pending' or order.status == 'Processing' %}
+                        <a href="{% url 'cancel_order' order.id %}?next={{ request.get_full_path|urlencode }}" 
+                           class="btn btn-outline-danger"
+                           onclick="return confirm('Are you sure you want to cancel this order?')">
+                            <i class="bi bi-x-circle"></i> Cancel Order
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'order_tracking' order.id %}?print=1" class="btn btn-outline-success" target="_blank" rel="noopener noreferrer">
+                            <i class="bi bi-printer"></i> Print Tracking
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+    .tracking-timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+    
+    .timeline-steps {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+    }
+    
+    .timeline-steps::before {
+        content: '';
+        position: absolute;
+        top: 30px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #e9ecef;
+        z-index: 0;
+    }
+    
+    .timeline-step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .timeline-icon {
+        width: 60px;
+        height: 60px;
+        background: #fff;
+        border: 2px solid #e9ecef;
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #adb5bd;
+        transition: all 0.3s ease;
+    }
+    
+    .timeline-step.completed .timeline-icon {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border-color: #28a745;
+        color: white;
+    }
+    
+    .timeline-step.active .timeline-icon {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: #667eea;
+        color: white;
+        transform: scale(1.1);
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .timeline-content h6 {
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .timeline-content p {
+        margin-bottom: 0;
+        font-size: 0.8rem;
+    }
+    
+    .history-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+    
+    .history-item {
+        transition: background-color 0.3s ease;
+    }
+    
+    .history-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .progress-bar {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .card {
+        animation: fadeIn 0.5s ease;
+    }
+    
+    @media (max-width: 768px) {
+        .timeline-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+        
+        .timeline-content h6 {
+            font-size: 0.75rem;
+        }
+        
+        .timeline-content p {
+            font-size: 0.7rem;
+        }
+    }
+    
+    @media print {
+        .btn, .navbar, .footer {
+            display: none !important;
+        }
+
+        .page-loader,
+        .top-strip,
+        .chatbot-widget {
+            display: none !important;
+        }
+        
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+        
+        .progress-bar {
+            background: #667eea !important;
+        }
+
+        .container,
+        .col-lg-10,
+        .mx-auto {
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+
+        body {
+            background: #fff !important;
+        }
+    }
+</style>
+
+{% if auto_print %}
+<script>
+    window.addEventListener('load', function() {
+        window.setTimeout(function() {
+            window.print();
+        }, 250);
+    });
+</script>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About Us - EMG Shipping Rwanda{% endblock %}
+
+{% block content %}
+
+<section class="page-hero text-center mb-5">
+    <p class="page-eyebrow">About EMG Shipping</p>
+    <h1 class="display-5 mb-3">Built to make local delivery feel effortless</h1>
+    <p class="lead mb-0">
+        {{ company_name }} helps customers across Kigali move from product discovery to doorstep delivery with clarity and speed.
+    </p>
+</section>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="stack-card h-100">
+            <p class="section-kicker">Mission</p>
+            <h2 class="section-heading mb-3">Reliable commerce, delivered well</h2>
+            <p class="text-muted mb-4">{{ mission }}</p>
+
+            <p class="section-kicker">Vision</p>
+            <h3 class="h3 mb-3">Where we are heading</h3>
+            <p class="text-muted mb-0">{{ vision }}</p>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="stack-card h-100">
+            <p class="section-kicker">Why Customers Choose Us</p>
+            <h2 class="h3 mb-3">A smoother way to buy and receive products</h2>
+            <ul class="check-list">
+                <li>
+                    <i class="bi bi-check2-circle"></i>
+                    <span>Fast delivery coverage across Gasabo, Kicukiro, and Nyarugenge.</span>
+                </li>
+                <li>
+                    <i class="bi bi-check2-circle"></i>
+                    <span>Clear order tracking and dependable post-purchase support.</span>
+                </li>
+                <li>
+                    <i class="bi bi-check2-circle"></i>
+                    <span>Flexible payment methods including cash and mobile money.</span>
+                </li>
+                <li>
+                    <i class="bi bi-check2-circle"></i>
+                    <span>A cleaner storefront that makes shopping feel modern and trustworthy.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+        <div>
+            <p class="section-kicker mb-2">Core Values</p>
+            <h2 class="section-heading mb-2">How we operate every day</h2>
+            <p class="section-subtitle mb-0">Our delivery service is shaped by consistency, speed, and customer confidence.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for value in values %}
+        <div class="col-md-4">
+            <div class="feature-tile">
+                <div class="feature-tile__icon">
+                    <i class="bi {{ value.icon }}"></i>
+                </div>
+                <h3 class="h4 mb-2">{{ value.title }}</h3>
+                <p class="text-muted mb-0">{{ value.desc }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="stack-card text-center">
+    <p class="section-kicker">Ready to Explore?</p>
+    <h2 class="section-heading mb-3">See what is available right now</h2>
+    <p class="text-muted mb-4">Browse the active catalog and order with fast delivery across Kigali.</p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-shop"></i> Start Shopping
+        </a>
+        <a href="{% url 'contact' %}" class="btn btn-outline-secondary btn-lg">
+            <i class="bi bi-chat-dots"></i> Contact Us
+        </a>
+    </div>
+</section>
+
+{% endblock %}

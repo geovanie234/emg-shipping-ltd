@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - EMG Shipping Rwanda{% endblock %}
+{% block body_class %}checkout-page{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'cart_detail' %}">Cart</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+                </ol>
+            </nav>
+
+            <h1 class="display-6 fw-bold">
+                <i class="bi bi-lock-fill text-primary"></i>
+                Secure Checkout
+            </h1>
+            <p class="text-muted mb-0">Confirm delivery details, choose payment, and place your order confidently.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <div class="checkout-steps">
+                        <div class="row">
+                            <div class="col-4 text-center">
+                                <div class="step completed">
+                                    <div class="step-icon bg-success text-white">
+                                        <i class="bi bi-check"></i>
+                                    </div>
+                                    <span class="step-text">Cart Review</span>
+                                </div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="step active">
+                                    <div class="step-icon bg-primary text-white">
+                                        <i class="bi bi-pencil"></i>
+                                    </div>
+                                    <span class="step-text">Checkout</span>
+                                </div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="step">
+                                    <div class="step-icon bg-light text-muted">
+                                        <i class="bi bi-check-circle"></i>
+                                    </div>
+                                    <span class="step-text">Confirmation</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-lg border-0">
+                <div class="card-header py-3">
+                    <h5 class="mb-0"><i class="bi bi-truck text-primary me-1"></i> Delivery Information</h5>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="post" id="checkoutForm" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Please correct the errors below:</strong>
+                            <ul class="mb-0 mt-2">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ field.label }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endif %}
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-person text-primary me-1"></i> Full Name *</label>
+                                <input type="text"
+                                       name="full_name"
+                                       class="form-control form-control-lg {% if form.full_name.errors %}is-invalid{% endif %}"
+                                       placeholder="Enter your full name"
+                                       value="{{ form.full_name.value|default:'' }}"
+                                       required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-envelope text-primary me-1"></i> Email Address</label>
+                                <input type="email"
+                                       name="email"
+                                       class="form-control form-control-lg {% if form.email.errors %}is-invalid{% endif %}"
+                                       placeholder="Enter your email"
+                                       value="{{ form.email.value|default:'' }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-phone text-primary me-1"></i> Phone Number</label>
+                                <input type="tel"
+                                       name="phone"
+                                       class="form-control form-control-lg {% if form.phone.errors %}is-invalid{% endif %}"
+                                       placeholder="0789 670 931"
+                                       value="{{ form.phone.value|default:'' }}">
+                                <small class="text-muted">Optional. Add it if you want delivery updates by SMS.</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-geo-alt text-primary me-1"></i> District *</label>
+                                <select name="district" class="form-select form-select-lg {% if form.district.errors %}is-invalid{% endif %}" required>
+                                    <option value="">Select your district</option>
+                                    <option value="Gasabo" {% if form.district.value == 'Gasabo' %}selected{% endif %}>Gasabo</option>
+                                    <option value="Kicukiro" {% if form.district.value == 'Kicukiro' %}selected{% endif %}>Kicukiro</option>
+                                    <option value="Nyarugenge" {% if form.district.value == 'Nyarugenge' %}selected{% endif %}>Nyarugenge</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label"><i class="bi bi-house-door text-primary me-1"></i> Delivery Address *</label>
+                                <textarea name="address"
+                                          class="form-control {% if form.address.errors %}is-invalid{% endif %}"
+                                          rows="3"
+                                          placeholder="Street, building, landmark..."
+                                          required>{{ form.address.value|default:'' }}</textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold"><i class="bi bi-credit-card text-primary me-1"></i> Payment Method *</label>
+                                <div class="payment-methods">
+                                    <div class="form-check payment-option mb-3">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="payment_cod" value="Cash on Delivery" {% if form.payment_method.value == 'Cash on Delivery' or not form.payment_method.value %}checked{% endif %} required>
+                                        <label class="form-check-label d-flex align-items-center" for="payment_cod">
+                                            <div class="payment-icon bg-light p-2 rounded me-3">
+                                                <i class="bi bi-cash fs-4 text-success"></i>
+                                            </div>
+                                            <div>
+                                                <strong>Cash on Delivery</strong>
+                                                <p class="text-muted small mb-0">Pay when your order arrives.</p>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check payment-option mb-3">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="payment_mtn" value="MTN Mobile Money" {% if form.payment_method.value == 'MTN Mobile Money' %}checked{% endif %}>
+                                        <label class="form-check-label d-flex align-items-center" for="payment_mtn">
+                                            <div class="payment-icon bg-light p-2 rounded me-3">
+                                                <i class="bi bi-phone fs-4 text-warning"></i>
+                                            </div>
+                                            <div>
+                                                <strong>MTN Mobile Money</strong>
+                                                <p class="text-muted small mb-0">Pay instantly with MoMo.</p>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check payment-option mb-0">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="payment_airtel" value="Airtel Money" {% if form.payment_method.value == 'Airtel Money' %}checked{% endif %}>
+                                        <label class="form-check-label d-flex align-items-center" for="payment_airtel">
+                                            <div class="payment-icon bg-light p-2 rounded me-3">
+                                                <i class="bi bi-phone fs-4 text-danger"></i>
+                                            </div>
+                                            <div>
+                                                <strong>Airtel Money</strong>
+                                                <p class="text-muted small mb-0">Pay instantly with Airtel Money.</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="payment-guide-panel mt-3" id="paymentGuidePanel">
+                                    <div class="payment-guide is-active" data-payment-guide="Cash on Delivery">
+                                        <div class="payment-guide__header">
+                                            <div>
+                                                <p class="section-kicker mb-2">Cash on Delivery</p>
+                                                <h6 class="mb-1">Simple pay-on-arrival process</h6>
+                                            </div>
+                                            <span class="payment-guide__badge">Default</span>
+                                        </div>
+                                        <ol class="payment-guide__steps">
+                                            <li>Review your order details and place the order from this checkout page.</li>
+                                            <li>Keep the tracking number shown after confirmation.</li>
+                                            <li>Prepare the exact amount of <strong>{{ grand_total }} RWF</strong> when the courier arrives.</li>
+                                            <li>Inspect your delivery, then complete payment directly to the rider.</li>
+                                        </ol>
+                                        <p class="payment-guide__note mb-0">Cash on delivery is the quickest option if you want to finish payment in person.</p>
+                                    </div>
+
+                                    <div class="payment-guide" data-payment-guide="MTN Mobile Money">
+                                        <div class="payment-guide__header">
+                                            <div>
+                                                <p class="section-kicker mb-2">MTN Mobile Money</p>
+                                                <h6 class="mb-1">Steps to complete a MoMo payment</h6>
+                                            </div>
+                                            <span class="payment-guide__badge">MoMo</span>
+                                        </div>
+                                        <ol class="payment-guide__steps">
+                                            <li>Place your order here first so the system generates your order number and total.</li>
+                                            <li>Open your MTN MoMo app or USSD menu on your phone.</li>
+                                            <li>Select the option to send money or pay a merchant, depending on your handset menu.</li>
+                                            <li>Use the payment details provided by EMG support and enter the exact total of <strong>{{ grand_total }} RWF</strong>.</li>
+                                            <li>Use your order number as the payment reference when your phone asks for a note.</li>
+                                            <li>Confirm the payment with your PIN and keep the confirmation SMS for your records.</li>
+                                        </ol>
+                                        <p class="payment-guide__note mb-0">
+                                            Mobile menu names can differ slightly by phone. If you need help, call or WhatsApp <a href="tel:0789670931">0789 670 931</a>.
+                                        </p>
+                                    </div>
+
+                                    <div class="payment-guide" data-payment-guide="Airtel Money">
+                                        <div class="payment-guide__header">
+                                            <div>
+                                                <p class="section-kicker mb-2">Airtel Money</p>
+                                                <h6 class="mb-1">Steps to complete an Airtel payment</h6>
+                                            </div>
+                                            <span class="payment-guide__badge">Airtel</span>
+                                        </div>
+                                        <ol class="payment-guide__steps">
+                                            <li>Place the order here first so your final amount and order number are recorded.</li>
+                                            <li>Open Airtel Money on your phone through the app or your Airtel menu.</li>
+                                            <li>Choose the option to send money or pay a merchant.</li>
+                                            <li>Enter the payment details given by EMG support and confirm the exact amount of <strong>{{ grand_total }} RWF</strong>.</li>
+                                            <li>Add your order number as the payment reason if the wallet prompts for a note.</li>
+                                            <li>Approve the transfer with your PIN and save the confirmation message until delivery is completed.</li>
+                                        </ol>
+                                        <p class="payment-guide__note mb-0">
+                                            If you get stuck on any step, contact <a href="tel:0789670931">0789 670 931</a> and the team will guide you.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="sms_opt_in" id="sms_opt_in" {% if form.sms_opt_in.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="sms_opt_in">
+                                        <i class="bi bi-chat-dots text-primary me-1"></i>
+                                        Receive SMS updates about my order
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label"><i class="bi bi-pencil text-primary me-1"></i> Order Notes</label>
+                                <textarea name="notes"
+                                          class="form-control {% if form.notes.errors %}is-invalid{% endif %}"
+                                          rows="2"
+                                          placeholder="Special instructions for delivery...">{{ form.notes.value|default:'' }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg" id="placeOrderBtn">
+                                <i class="bi bi-check-circle"></i> Place Order
+                            </button>
+                            <a href="{% url 'cart_detail' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Return to Cart
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-footer py-3">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <i class="bi bi-shield-lock text-success"></i>
+                            <small class="d-block">Secure Payment</small>
+                        </div>
+                        <div class="col-4">
+                            <i class="bi bi-clock-history text-primary"></i>
+                            <small class="d-block">Fast Delivery</small>
+                        </div>
+                        <div class="col-4">
+                            <i class="bi bi-headset text-warning"></i>
+                            <small class="d-block">24/7 Support</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 sticky-top" style="top: 100px;">
+                <div class="card-header py-3">
+                    <h5 class="mb-0"><i class="bi bi-receipt text-primary me-1"></i> Order Summary</h5>
+                </div>
+
+                <div class="card-body">
+                    <div class="cart-items-preview mb-4">
+                        <h6 class="mb-3">Items in your cart</h6>
+
+                        {% for item in cart_items %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class="fw-bold">{{ item.product.name }}</span>
+                                <span class="text-muted small"> x{{ item.quantity }}</span>
+                            </div>
+                            <span>{{ item.total_price }} RWF</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal</span>
+                        <span>{{ total }} RWF</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Delivery Fee</span>
+                        <span>{% if delivery_fee %}{{ delivery_fee }} RWF{% else %}FREE{% endif %}</span>
+                    </div>
+
+                    {% if not delivery_fee %}
+                    <div class="alert alert-success py-2 mb-3">
+                        <i class="bi bi-truck me-1"></i> Free delivery applied.
+                    </div>
+                    {% endif %}
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between mb-4">
+                        <span class="h5 fw-bold">Total</span>
+                        <span class="h5 fw-bold text-primary">{{ grand_total }} RWF</span>
+                    </div>
+
+                    <div class="delivery-promise p-3 rounded">
+                        <h6 class="mb-2"><i class="bi bi-truck text-primary me-1"></i> Delivery Promise</h6>
+                        <p class="small text-muted mb-1"><i class="bi bi-check-circle text-success me-1"></i> Delivered within 24 hours</p>
+                        <p class="small text-muted mb-1"><i class="bi bi-check-circle text-success me-1"></i> Inventory is confirmed before payment</p>
+                        <p class="small text-muted mb-0"><i class="bi bi-check-circle text-success me-1"></i> Real-time tracking is available after checkout</p>
+                    </div>
+
+                    <div class="mt-4">
+                        <h6 class="mb-2">We Accept</h6>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <span class="badge bg-light text-dark"><i class="bi bi-cash"></i> Cash</span>
+                            <span class="badge bg-light text-dark"><i class="bi bi-phone text-warning"></i> MTN MoMo</span>
+                            <span class="badge bg-light text-dark"><i class="bi bi-phone text-danger"></i> Airtel</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('checkoutForm');
+        const submitBtn = document.getElementById('placeOrderBtn');
+        const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+        const paymentGuides = document.querySelectorAll('[data-payment-guide]');
+
+        form.addEventListener('submit', function() {
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+        });
+
+        const phoneInput = document.querySelector('input[name="phone"]');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function() {
+                let value = this.value.replace(/\D/g, '');
+                if (value.length > 15) {
+                    value = value.slice(0, 15);
+                }
+                if (value.length <= 3) {
+                    this.value = value;
+                } else if (value.length <= 6) {
+                    this.value = value.slice(0, 3) + ' ' + value.slice(3);
+                } else {
+                    this.value = value.slice(0, 3) + ' ' + value.slice(3, 6) + ' ' + value.slice(6);
+                }
+            });
+        }
+
+        document.querySelectorAll('.payment-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
+                    syncPaymentGuide(radio.value);
+                }
+            });
+        });
+
+        function syncPaymentGuide(selectedPayment) {
+            paymentGuides.forEach(function(guide) {
+                guide.classList.toggle('is-active', guide.dataset.paymentGuide === selectedPayment);
+            });
+
+            if (selectedPayment === 'MTN Mobile Money') {
+                submitBtn.innerHTML = '<i class="bi bi-phone"></i> Place Order and View MoMo Steps';
+            } else if (selectedPayment === 'Airtel Money') {
+                submitBtn.innerHTML = '<i class="bi bi-phone"></i> Place Order and View Airtel Steps';
+            } else {
+                submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Place Order';
+            }
+        }
+
+        paymentRadios.forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                syncPaymentGuide(this.value);
+            });
+        });
+
+        const activeRadio = document.querySelector('input[name="payment_method"]:checked');
+        if (activeRadio) {
+            syncPaymentGuide(activeRadio.value);
+        }
+    });
+</script>
+{% endblock %}

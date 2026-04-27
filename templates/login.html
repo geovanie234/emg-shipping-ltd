@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - EMG Shipping Rwanda{% endblock %}
+
+{% block content %}
+
+<section class="auth-shell">
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="auth-visual">
+                <p class="page-eyebrow">Customer Access</p>
+                <h1 class="display-6 mb-3">Welcome back</h1>
+                <p class="lead mb-0">Sign in to manage your cart, track orders, and check out faster across Kigali.</p>
+
+                <ul class="auth-visual__points">
+                    <li>
+                        <i class="bi bi-check2-circle"></i>
+                        <span>See your order history and current delivery progress in one place.</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check2-circle"></i>
+                        <span>Keep your cart saved and move through checkout with fewer steps.</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check2-circle"></i>
+                        <span>Reach support quickly if you need help with payments or delivery.</span>
+                    </li>
+                </ul>
+
+                <div class="trust-strip mt-4">
+                    <div class="trust-item">
+                        <i class="bi bi-shield-check text-success"></i>
+                        <small class="d-block fw-semibold">Secure access</small>
+                    </div>
+                    <div class="trust-item">
+                        <i class="bi bi-lightning-charge text-warning"></i>
+                        <small class="d-block fw-semibold">Fast checkout</small>
+                    </div>
+                    <div class="trust-item">
+                        <i class="bi bi-headset text-info"></i>
+                        <small class="d-block fw-semibold">Responsive support</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="auth-card card border-0">
+                <p class="section-kicker">Login</p>
+                <h2 class="section-heading mb-2">Access your account</h2>
+                <p class="text-muted mb-4">Enter your account details below.</p>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        {{ form.non_field_errors.0 }}
+                    </div>
+                {% endif %}
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="form-floating mb-4">
+                        <input
+                            type="text"
+                            name="username"
+                            class="form-control form-control-lg {% if form.username.errors %}is-invalid{% endif %}"
+                            id="id_username"
+                            placeholder="Username"
+                            value="{{ form.username.value|default:'' }}"
+                            required>
+                        <label for="id_username"><i class="bi bi-person me-2"></i>Username</label>
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback">{{ form.username.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-floating mb-3 position-relative">
+                        <input
+                            type="password"
+                            name="password"
+                            class="form-control form-control-lg {% if form.password.errors %}is-invalid{% endif %}"
+                            id="id_password"
+                            placeholder="Password"
+                            required>
+                        <label for="id_password"><i class="bi bi-lock me-2"></i>Password</label>
+                        <button type="button" class="auth-toggle" data-toggle-password="id_password" aria-label="Show password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        {% if form.password.errors %}
+                            <div class="invalid-feedback">{{ form.password.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                        <span class="small text-muted">Your cart and orders will be available as soon as you sign in.</span>
+                        <span class="small text-muted">Need help logging in? Contact support below.</span>
+                    </div>
+
+                    {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                    {% endif %}
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </button>
+                    </div>
+                </form>
+
+                <div class="auth-divider">
+                    <span>Need another option?</span>
+                </div>
+
+                <div class="auth-support">
+                    <a href="tel:0789670931">
+                        <i class="bi bi-telephone"></i> Call support
+                    </a>
+                    <a href="https://wa.me/250789670931?text=Hello%20EMG%20Shipping%2C%20I%20need%20help%20logging%20in." target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-whatsapp"></i> WhatsApp support
+                    </a>
+                </div>
+
+                <div class="mt-4">
+                    <p class="text-muted mb-0">
+                        Do not have an account?
+                        <a href="{% url 'register' %}{% if next %}?next={{ next }}{% endif %}" class="fw-bold">
+                            Create one now
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('[data-toggle-password]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const input = document.getElementById(this.dataset.togglePassword);
+                if (!input) {
+                    return;
+                }
+
+                const nextType = input.type === 'password' ? 'text' : 'password';
+                input.type = nextType;
+                this.innerHTML = nextType === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+            });
+        });
+    });
+</script>
+{% endblock %}

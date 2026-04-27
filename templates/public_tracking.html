@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Track Order - EMG Shipping Rwanda{% endblock %}
+{% block body_class %}public-tracking-page{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold">
+                    <i class="bi bi-truck text-primary"></i>
+                    Track Your Order
+                </h1>
+                <p class="lead text-muted">Enter your tracking number or order number to check status, processing details, delivery progress, and ordered items.</p>
+            </div>
+
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-body p-4">
+                    <form method="get" action="{% url 'public_tracking_search' %}">
+                        <div class="input-group input-group-lg">
+                            <input type="text"
+                                   name="tracking_number"
+                                   class="form-control"
+                                   placeholder="Enter tracking or order number"
+                                   autocomplete="off"
+                                   autofocus
+                                   required
+                                   value="{{ tracking_number|default:'' }}">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-search"></i> Track
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if tracking_error %}
+            <div class="alert alert-warning text-center mb-4">
+                <i class="bi bi-exclamation-circle me-1"></i> {{ tracking_error }}
+            </div>
+            {% endif %}
+
+            {% if order %}
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-4">
+                    <h4 class="mb-4">
+                        <i class="bi bi-box-seam text-primary"></i>
+                        Order Status
+                    </h4>
+
+                    <div class="text-center mb-4">
+                        {% if order.status == 'Delivered' %}
+                            <span class="badge bg-success fs-5 px-4 py-3"><i class="bi bi-check-circle-fill"></i> DELIVERED</span>
+                        {% elif order.status == 'Shipped' %}
+                            <span class="badge bg-info fs-5 px-4 py-3"><i class="bi bi-truck"></i> IN TRANSIT</span>
+                        {% elif order.status == 'Processing' %}
+                            <span class="badge bg-warning fs-5 px-4 py-3"><i class="bi bi-gear"></i> PROCESSING</span>
+                        {% elif order.status == 'Pending' %}
+                            <span class="badge bg-secondary fs-5 px-4 py-3"><i class="bi bi-clock"></i> PENDING</span>
+                        {% else %}
+                            <span class="badge bg-danger fs-5 px-4 py-3"><i class="bi bi-x-circle"></i> {{ order.status }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" role="progressbar" style="width: {{ progress }}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+                            <p><strong>Tracking Number:</strong> {{ order.tracking_number }}</p>
+                            <p><strong>Payment Status:</strong> {{ order.payment_status|default:"Pending" }}</p>
+                            <p class="mb-md-0"><strong>Current Location:</strong> {{ order.current_location|default:"Order Processing Center" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Order Date:</strong> {{ order.created_at|date:"M d, Y" }}</p>
+                            <p><strong>Delivery District:</strong> {{ order.district|default:"Kigali" }}</p>
+                            <p><strong>Estimated Delivery:</strong>
+                                {% if order.estimated_delivery %}
+                                    {{ order.estimated_delivery|date:"M d, Y" }}
+                                {% else %}
+                                    Within 24 hours
+                                {% endif %}
+                            </p>
+                            <p class="mb-0"><strong>Status Note:</strong> {{ order.get_delivery_status }}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="surface-panel p-3 h-100">
+                                <p class="small text-muted text-uppercase fw-semibold mb-2">Processing Team</p>
+                                <p class="mb-0 fw-semibold">
+                                    {% if latest_update and latest_update.updated_by %}
+                                        {{ latest_update.updated_by.get_full_name|default:latest_update.updated_by.username }}
+                                    {% else %}
+                                        EMG Fulfilment Team
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="surface-panel p-3 h-100">
+                                <p class="small text-muted text-uppercase fw-semibold mb-2">Items In Order</p>
+                                <p class="mb-0 fw-semibold">{{ order.item_count }} item{{ order.item_count|pluralize }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="surface-panel p-3 h-100">
+                                <p class="small text-muted text-uppercase fw-semibold mb-2">Delivery Address</p>
+                                <p class="mb-0 fw-semibold">{{ order.address|default:"Address will be confirmed by support" }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="mt-4">
+                        <h5 class="mb-3">Ordered Items</h5>
+                        <div class="d-flex flex-column gap-3">
+                            {% for item in order.items.all %}
+                            <div class="surface-panel p-3">
+                                <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                                    <div>
+                                        <strong>{{ item.product.name|default:"Product removed" }}</strong>
+                                        <p class="text-muted small mb-1">Quantity: {{ item.quantity }}</p>
+                                        <p class="mb-0">{{ item.price }} RWF each</p>
+                                    </div>
+                                    <strong>{{ item.total_price }} RWF</strong>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% if tracking_updates %}
+                    <hr>
+                    <div class="mt-4">
+                        <h5 class="mb-3">Recent Updates</h5>
+                        <div class="d-flex flex-column gap-3">
+                            {% for update in tracking_updates|slice:":4" %}
+                            <div class="surface-panel p-3">
+                                <div class="d-flex justify-content-between align-items-start gap-3">
+                                    <div>
+                                        <strong>{{ update.status }}</strong>
+                                        <p class="text-muted small mb-1">{{ update.location }}</p>
+                                        <p class="mb-0">{{ update.description }}</p>
+                                        {% if update.updated_by %}
+                                        <p class="small text-muted mt-2 mb-0">
+                                            Processed by {{ update.updated_by.get_full_name|default:update.updated_by.username }}
+                                        </p>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted">{{ update.created_at|date:"M d, Y H:i" }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                        {% if user == order.user or user.is_staff %}
+                    <hr>
+                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                        <a href="{% url 'order_tracking' order.id %}" class="btn btn-primary">
+                            <i class="bi bi-truck"></i> View Full Tracking Details
+                        </a>
+                        {% if order.status == 'Pending' or order.status == 'Processing' %}
+                        <a href="{% url 'cancel_order' order.id %}?next={{ request.get_full_path|urlencode }}" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to cancel this order?');">
+                            <i class="bi bi-x-circle"></i> Cancel Order
+                        </a>
+                        {% endif %}
+                    </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

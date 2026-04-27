@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Invoice #{{ order.order_number }} - EMG Shipping Rwanda{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            
+            <!-- Invoice Header -->
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-0">
+                    
+                    <!-- Invoice Header Section -->
+                    <div class="bg-gradient-primary text-white p-4 rounded-top">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h1 class="display-5 fw-bold mb-0">
+                                    <i class="bi bi-receipt"></i> INVOICE
+                                </h1>
+                                <p class="mb-0 mt-2 opacity-75">Order Confirmation & Receipt</p>
+                            </div>
+                            <div class="col-md-4 text-md-end">
+                                <div class="bg-white text-dark p-3 rounded shadow-sm d-inline-block">
+                                    <small class="text-muted d-block">Order Number</small>
+                                    <strong class="h5">{{ order.order_number }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Invoice Body -->
+                    <div class="p-4">
+                        
+                        <!-- Status & Date Row -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="bi bi-calendar-check text-primary fs-3"></i>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted d-block">Invoice Date</small>
+                                        <strong>{{ order.created_at|date:"F d, Y" }}</strong>
+                                        <span class="text-muted ms-2">{{ order.created_at|time:"g:i A" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center justify-content-md-end">
+                                    <div class="me-3">
+                                        <i class="bi bi-truck text-primary fs-3"></i>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted d-block">Order Status</small>
+                                        {% if order.status == 'Delivered' %}
+                                            <span class="badge bg-success fs-6 px-3 py-2">
+                                                <i class="bi bi-check-circle"></i> {{ order.status }}
+                                            </span>
+                                        {% elif order.status == 'Shipped' %}
+                                            <span class="badge bg-info fs-6 px-3 py-2">
+                                                <i class="bi bi-truck"></i> {{ order.status }}
+                                            </span>
+                                        {% elif order.status == 'Processing' %}
+                                            <span class="badge bg-warning fs-6 px-3 py-2">
+                                                <i class="bi bi-arrow-repeat"></i> {{ order.status }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary fs-6 px-3 py-2">
+                                                <i class="bi bi-clock"></i> {{ order.status }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- Customer & Delivery Info -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5 class="mb-3">
+                                    <i class="bi bi-person text-primary"></i> 
+                                    Customer Information
+                                </h5>
+                                <div class="bg-light p-3 rounded">
+                                    <p class="mb-2">
+                                        <strong>Full Name:</strong><br>
+                                        {{ order.full_name }}
+                                    </p>
+                                    <p class="mb-2">
+                                        <strong>Phone Number:</strong><br>
+                                        <i class="bi bi-telephone"></i> {{ order.phone|default:"Not provided" }}
+                                    </p>
+                                    {% if order.email %}
+                                    <p class="mb-0">
+                                        <strong>Email:</strong><br>
+                                        <i class="bi bi-envelope"></i> {{ order.email }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h5 class="mb-3">
+                                    <i class="bi bi-geo-alt text-primary"></i> 
+                                    Delivery Address
+                                </h5>
+                                <div class="bg-light p-3 rounded">
+                                    <p class="mb-2">
+                                        <strong>District:</strong><br>
+                                        {{ order.district }}
+                                    </p>
+                                    <p class="mb-2">
+                                        <strong>City:</strong><br>
+                                        {{ order.city }}
+                                    </p>
+                                    <p class="mb-0">
+                                        <strong>Address:</strong><br>
+                                        {{ order.address }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Order Items Table -->
+                        <h5 class="mb-3">
+                            <i class="bi bi-box-seam text-primary"></i> 
+                            Order Items
+                        </h5>
+                        
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered table-hover">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Product</th>
+                                        <th class="text-center">Quantity</th>
+                                        <th class="text-end">Unit Price</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            <strong>{{ item.product.name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ item.product.description|truncatewords:8 }}</small>
+                                        </td>
+                                        <td class="text-center">{{ item.quantity }}</td>
+                                        <td class="text-end">{{ item.price }} RWF</td>
+                                        <td class="text-end"><strong>{{ item.total_price }} RWF</strong></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="bg-light">
+                                    <tr>
+                                        <td colspan="4" class="text-end fw-bold">Subtotal:</td>
+                                        <td class="text-end">{{ order.subtotal }} RWF</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4" class="text-end fw-bold">Delivery Fee:</td>
+                                        <td class="text-end">{{ order.delivery_fee }} RWF</td>
+                                    </tr>
+                                    <tr class="table-primary">
+                                        <td colspan="4" class="text-end fw-bold h5">Total:</td>
+                                        <td class="text-end h5 text-primary fw-bold">{{ order.total_price }} RWF</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        
+                        <!-- Payment Information -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5 class="mb-3">
+                                    <i class="bi bi-credit-card text-primary"></i> 
+                                    Payment Method
+                                </h5>
+                                <div class="bg-light p-3 rounded">
+                                    <div class="d-flex align-items-center">
+                                        {% if order.payment_method == 'Cash on Delivery' %}
+                                            <i class="bi bi-cash text-success fs-2 me-3"></i>
+                                        {% elif order.payment_method == 'MTN Mobile Money' %}
+                                            <i class="bi bi-phone text-warning fs-2 me-3"></i>
+                                        {% elif order.payment_method == 'Airtel Money' %}
+                                            <i class="bi bi-phone text-danger fs-2 me-3"></i>
+                                        {% else %}
+                                            <i class="bi bi-credit-card text-primary fs-2 me-3"></i>
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ order.payment_method }}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                {% if order.payment_method == 'Cash on Delivery' %}
+                                                    Pay when you receive your order
+                                                {% elif order.payment_method == 'MTN Mobile Money' %}
+                                                    Pay using MTN MoMo at delivery
+                                                {% elif order.payment_method == 'Airtel Money' %}
+                                                    Pay using Airtel Money at delivery
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h5 class="mb-3">
+                                    <i class="bi bi-info-circle text-primary"></i> 
+                                    Important Notes
+                                </h5>
+                                <div class="bg-light p-3 rounded">
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-2">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            Please keep this invoice for reference
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            For support, contact 0789 670 931
+                                        </li>
+                                        <li>
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            Track your order with: {{ order.tracking_number }}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ACTION BUTTONS - UPDATED SECTION -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between gap-2 flex-wrap">
+                                    <button type="button" class="btn btn-primary" onclick="window.print()">
+                                        <i class="bi bi-printer"></i> Print Invoice
+                                    </button>
+                                    <a href="{% url 'my_orders' %}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-arrow-left"></i> Back to Orders
+                                    </a>
+                                    <a href="{% url 'order_tracking' order.id %}" class="btn btn-outline-info">
+                                        <i class="bi bi-truck"></i> Track Order
+                                    </a>
+                                    
+                                    <!-- Cancel Order Button - Only show if order is pending -->
+                                    {% if order.status == 'Pending' %}
+                                        {% url 'cancel_order' order.id as cancel_url %}
+                                        {% if cancel_url %}
+                                        <a href="{{ cancel_url }}" 
+                                           class="btn btn-outline-danger"
+                                           onclick="return confirm('Are you sure you want to cancel this order? This action cannot be undone.')">
+                                            <i class="bi bi-x-circle"></i> Cancel Order
+                                        </a>
+                                        {% endif %}
+                                    {% endif %}
+                                    
+                                    <!-- Reorder Button - Only show if order is delivered or cancelled -->
+                                    {% if order.status == 'Delivered' or order.status == 'Cancelled' %}
+                                    <a href="{% url 'reorder' order.id %}" class="btn btn-outline-success">
+                                        <i class="bi bi-arrow-repeat"></i> Reorder
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer Note -->
+                        <hr class="mt-4">
+                        <div class="text-center mt-3">
+                            <p class="text-muted small mb-0">
+                                <i class="bi bi-truck"></i> EMG Shipping Rwanda | Fast delivery across Kigali districts
+                            </p>
+                            <p class="text-muted small mb-0">
+                                Thank you for shopping with us!
+                            </p>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .table th, .table td {
+        vertical-align: middle;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .badge {
+        font-weight: 500;
+        border-radius: 50px;
+    }
+    
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+    
+    @media print {
+        .btn, .navbar, .footer, .bg-gradient-primary .text-md-end .bg-white {
+            display: none !important;
+        }
+        
+        .bg-gradient-primary {
+            background: #667eea !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+        
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 100% !important;
+            padding: 0 !important;
+        }
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .card {
+        animation: fadeIn 0.5s ease;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-outline-secondary:hover,
+    .btn-outline-info:hover,
+    .btn-outline-danger:hover,
+    .btn-outline-success:hover {
+        transform: translateY(-2px);
+    }
+</style>
+
+<script>
+    // Auto-hide alert messages after 5 seconds
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.transition = 'opacity 0.5s ease';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        });
+    }, 5000);
+
+    {% if auto_print %}
+    window.addEventListener('load', function() {
+        window.setTimeout(function() {
+            window.print();
+        }, 250);
+    });
+    {% endif %}
+</script>
+
+{% endblock %}

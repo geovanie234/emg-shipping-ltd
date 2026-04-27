@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Account - EMG Shipping Rwanda{% endblock %}
+
+{% block content %}
+
+<section class="auth-shell">
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="auth-visual">
+                <p class="page-eyebrow">New Account</p>
+                <h1 class="display-6 mb-3">Create your EMG profile</h1>
+                <p class="lead mb-0">Register once to track orders, save your cart, and move through checkout much faster.</p>
+
+                <ul class="auth-visual__points">
+                    <li>
+                        <i class="bi bi-check2-circle"></i>
+                        <span>Keep your delivery details ready for future orders.</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check2-circle"></i>
+                        <span>Track every order from checkout to doorstep.</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check2-circle"></i>
+                        <span>Access a cleaner order history and faster support when needed.</span>
+                    </li>
+                </ul>
+
+                <div class="trust-strip mt-4">
+                    <div class="trust-item">
+                        <i class="bi bi-truck text-primary"></i>
+                        <small class="d-block fw-semibold">Fast delivery</small>
+                    </div>
+                    <div class="trust-item">
+                        <i class="bi bi-shield-check text-success"></i>
+                        <small class="d-block fw-semibold">Secure account</small>
+                    </div>
+                    <div class="trust-item">
+                        <i class="bi bi-gift text-warning"></i>
+                        <small class="d-block fw-semibold">Returning-customer convenience</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="auth-card card border-0">
+                <p class="section-kicker">Register</p>
+                <h2 class="section-heading mb-2">Create your account</h2>
+                <p class="text-muted mb-4">Set up your details below and start shopping with a more polished flow.</p>
+
+                {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        Please correct the highlighted fields and try again.
+                    </div>
+                {% endif %}
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                    {% endif %}
+
+                    <div class="form-floating mb-3">
+                        <input
+                            type="text"
+                            name="username"
+                            class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                            id="id_username"
+                            placeholder="Username"
+                            value="{{ form.username.value|default:'' }}"
+                            required>
+                        <label for="id_username"><i class="bi bi-person me-2"></i>Username</label>
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback">{{ form.username.errors.0 }}</div>
+                        {% endif %}
+                        {% if form.username.help_text %}
+                            <div class="form-text">{{ form.username.help_text|safe }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input
+                            type="email"
+                            name="email"
+                            class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                            id="id_email"
+                            placeholder="Email address"
+                            value="{{ form.email.value|default:'' }}">
+                        <label for="id_email"><i class="bi bi-envelope me-2"></i>Email address</label>
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-floating mb-3 position-relative">
+                        <input
+                            type="password"
+                            name="password1"
+                            class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
+                            id="id_password1"
+                            placeholder="Password"
+                            required>
+                        <label for="id_password1"><i class="bi bi-lock me-2"></i>Password</label>
+                        <button type="button" class="auth-toggle" data-toggle-password="id_password1" aria-label="Show password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        {% if form.password1.errors %}
+                            <div class="invalid-feedback">{{ form.password1.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar" id="passwordStrength" role="progressbar" style="width: 0%;"></div>
+                        </div>
+                        <small class="text-muted" id="passwordStrengthText">Create a password with letters and numbers.</small>
+                        {% if form.password1.help_text %}
+                            <div class="form-text mt-1">{{ form.password1.help_text|safe }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-floating mb-4 position-relative">
+                        <input
+                            type="password"
+                            name="password2"
+                            class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
+                            id="id_password2"
+                            placeholder="Confirm password"
+                            required>
+                        <label for="id_password2"><i class="bi bi-lock-fill me-2"></i>Confirm password</label>
+                        <button type="button" class="auth-toggle" data-toggle-password="id_password2" aria-label="Show password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        {% if form.password2.errors %}
+                            <div class="invalid-feedback">{{ form.password2.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input type="checkbox" class="form-check-input" id="terms">
+                        <label class="form-check-label text-muted" for="terms">
+                            I agree to EMG Shipping's ordering and delivery terms.
+                        </label>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+                            <i class="bi bi-person-plus"></i> Create Account
+                        </button>
+                    </div>
+                </form>
+
+                <div class="auth-divider">
+                    <span>Need help?</span>
+                </div>
+
+                <div class="auth-support">
+                    <a href="tel:0789670931">
+                        <i class="bi bi-telephone"></i> Call support
+                    </a>
+                    <a href="https://wa.me/250789670931?text=Hello%20EMG%20Shipping%2C%20I%20need%20help%20creating%20an%20account." target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-whatsapp"></i> WhatsApp support
+                    </a>
+                </div>
+
+                <div class="mt-4">
+                    <p class="text-muted mb-0">
+                        Already have an account?
+                        <a href="{% url 'login' %}{% if next %}?next={{ next }}{% endif %}" class="fw-bold">
+                            Sign in here
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const password1 = document.getElementById('id_password1');
+        const password2 = document.getElementById('id_password2');
+        const strengthBar = document.getElementById('passwordStrength');
+        const strengthText = document.getElementById('passwordStrengthText');
+        const termsCheck = document.getElementById('terms');
+        const submitBtn = document.getElementById('submitBtn');
+
+        function updateStrength() {
+            const password = password1.value;
+            let strength = 0;
+            let message = 'Create a password with letters and numbers.';
+            let tone = 'bg-danger';
+
+            if (password.length >= 8) strength += 25;
+            if (/[a-z]/.test(password)) strength += 25;
+            if (/[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password)) strength += 25;
+
+            if (strength >= 75) {
+                message = 'Strong password';
+                tone = 'bg-success';
+            } else if (strength >= 50) {
+                message = 'Good password';
+                tone = 'bg-info';
+            } else if (strength >= 25) {
+                message = 'Fair password';
+                tone = 'bg-warning';
+            }
+
+            strengthBar.style.width = strength + '%';
+            strengthBar.className = 'progress-bar ' + tone;
+            strengthText.textContent = message;
+        }
+
+        function validateForm() {
+            const passwordsMatch = password1.value.length > 0 && password1.value === password2.value;
+            const termsAccepted = termsCheck.checked;
+            submitBtn.disabled = !(passwordsMatch && termsAccepted);
+
+            if (password2.value.length > 0) {
+                password2.classList.toggle('is-invalid', password1.value !== password2.value);
+                password2.classList.toggle('is-valid', password1.value === password2.value);
+            } else {
+                password2.classList.remove('is-invalid', 'is-valid');
+            }
+        }
+
+        [password1, password2].forEach(function(input) {
+            input.addEventListener('input', function() {
+                updateStrength();
+                validateForm();
+            });
+        });
+
+        termsCheck.addEventListener('change', validateForm);
+
+        document.querySelectorAll('[data-toggle-password]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const input = document.getElementById(this.dataset.togglePassword);
+                if (!input) {
+                    return;
+                }
+
+                const nextType = input.type === 'password' ? 'text' : 'password';
+                input.type = nextType;
+                this.innerHTML = nextType === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+            });
+        });
+    });
+</script>
+{% endblock %}
